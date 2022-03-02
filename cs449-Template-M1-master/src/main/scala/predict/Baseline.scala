@@ -2,13 +2,14 @@ package predict
 
 import org.rogach.scallop._
 import org.apache.spark.rdd.RDD
-
 import org.apache.spark.sql.SparkSession
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
 
 import scala.math
 import shared.predictions._
+
+import scala.math.abs
 
 
 class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
@@ -37,11 +38,25 @@ object Baseline extends App {
   // to not depend on Spark
   println("Loading training data from: " + conf.train()) 
   val train = load(spark, conf.train(), conf.separator()).collect()
+  print(train(1))
   println("Loading test data from: " + conf.test()) 
   val test = load(spark, conf.test(), conf.separator()).collect()
 
+  // Apply preprocessing operations on the train and test
+  val normalizedTrain = preprocess(train)
+  val normalizedTest = preprocess(test)
+
+  // Average rating statistics
+  val meanGlobal = mean(train.map(x => x.rating))
+  val user1Avg = mean(train.filter(x => x.user == 1).map(x => x.rating))
+  val item1Avg = mean(train.filter(x => x.item == 1).map(x => x.rating))
+  val item1AvgDev = std(train.filter(x => x.item == 1).map(x => x.rating))
+  val item1AvgDevScale = stdScale(train.filter(x => x.item == 1).map(x => x.rating))
+  val predUser1Item1 = user1Avg + item1AvgDev * scaleUserRating(user1Avg + item1AvgDev, user1Avg)
+
   val measurements = (1 to conf.num_measurements()).map(x => timingInMs(() => {
     Thread.sleep(1000) // Do everything here from train and test
+    println(train.map(x => abs(x.rating - meanGlobal)).sum)
     42        // Output answer as last value
   }))
   val timings = measurements.map(t => t._2) // Retrieve the timing measurements
@@ -55,14 +70,8 @@ object Baseline extends App {
       } finally{ f.close }
   }
 
-  val meanGlobal = mean(train.map(x => x.rating))
-  val User1Avg = mean(train.filter(x => x.user == 1).map(x => x.rating))
-  val Item1Avg = mean(train.filter(x => x.item == 1).map(x => x.rating))
-  val Item1AvgDev = std(train.filter(x => x.item == 1).map(x => x.rating))
-  val Item1AvgDevScale = stdScale(train.filter(x => x.item == 1).map(x => x.rating))
-  val PredUser1Item1 = User1Avg + Item1AvgDev * scaleUserRating(User1Avg + Item1AvgDev, User1Avg)
   conf.json.toOption match {
-    case None => ; 
+    case None => ;
     case Some(jsonFile) => {
       var answers = ujson.Obj(
         "Meta" -> ujson.Obj(
@@ -73,11 +82,11 @@ object Baseline extends App {
         ),
         "B.1" -> ujson.Obj(
           "1.GlobalAvg" -> meanGlobal, // Datatype of answer: Double
-          "2.User1Avg" -> User1Avg,  // Datatype of answer: Double
-          "3.Item1Avg" -> Item1Avg,   // Datatype of answer: Double
-          "4.Item1AvgDev" -> Item1AvgDev, // Datatype of answer: Double
-          "6.scaleItem1AvgDev" -> Item1AvgDevScale, // Datatype of answer: Double
-          "5.PredUser1Item1" -> PredUser1Item1 // Datatype of answer: Double
+          "2.User1Avg" -> user1Avg,  // Datatype of answer: Double
+          "3.Item1Avg" -> item1Avg,   // Datatype of answer: Double
+          "4.Item1AvgDev" -> item1AvgDev, // Datatype of answer: Double
+          "6.scaleItem1AvgDev" -> item1AvgDevScale, // Datatype of answer: Double
+          "5.PredUser1Item1" -> predUser1Item1 // Datatype of answer: Double
         ),
         "B.2" -> ujson.Obj(
           "1.GlobalAvgMAE" -> ujson.Num(0.0), // Datatype of answer: Double
