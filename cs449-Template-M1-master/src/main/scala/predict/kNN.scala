@@ -34,11 +34,10 @@ object kNN extends App {
   println("******************************************************")
 
   var conf = new PersonalizedConf(args) 
-  println("Loading training data from: " + conf.train()) 
+  println("Loading training data from: " + conf.train())
   val train = load(spark, conf.train(), conf.separator()).collect()
-  println("Loading test data from: " + conf.test()) 
+  println("Loading test data from: " + conf.test())
   val test = load(spark, conf.test(), conf.separator()).collect()
-
 
   val measurements = (1 to conf.num_measurements()).map(x => timingInMs(() => {
     Thread.sleep(1000) // Do everything here from train and test
