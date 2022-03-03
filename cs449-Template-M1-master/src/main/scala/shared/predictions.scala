@@ -92,7 +92,7 @@ package object predictions {
   case class Rating(user: Int, item: Int, rating: Double)
 
   /**
-   * This object contains the functions that generate the results used only in section B.
+   * This class contains the functions that generate the results used only in section B.
    */
   class BSolvers(train: Array[Rating], test: Array[Rating]) {
     // Apply preprocessing operations on the train and test
@@ -166,9 +166,7 @@ package object predictions {
     }
 
     /**
-     * @param predictions Array of Rating objects containing prediction values
-     * @param trueRatings Array of Rating objects containing the true values
-     * @return Mean Average Error between the predictions and the trueRatings
+     * Mean Average Error between the predictions and the trueRatings.
      */
     def getMAE(predictions: Array[Rating], trueRatings: Array[Rating]): Double = {
       (predictions zip trueRatings).map({ case (x, y) => abs(x.rating - y.rating) }).sum / trueRatings.length
