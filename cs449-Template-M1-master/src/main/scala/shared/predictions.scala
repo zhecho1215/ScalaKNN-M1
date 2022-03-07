@@ -50,9 +50,9 @@ package object predictions {
    * Function that normalizes the ratings of a dataset.
    *
    * @param data The input dataset, with non-normalized ratings.
-   * @return
+   * @return The normalized ratings.
    */
-  def preprocess(data: Array[Rating]): (Array[Rating], Map[Int, Double]) = {
+  def normalizeRatings(data: Array[Rating]): Array[Rating] = {
     // Group all ratings by user and compute the average rating for each user
     val avgRatingByUser = data.groupBy(x => x.user).map {
       case (k, v) => (k, mean(v.map(x => x.rating)))
@@ -60,8 +60,7 @@ package object predictions {
 
     // Normalize each rating
     val normalizedData = data.map(x => normalizeRating(x, avgRatingByUser(x.user)))
-
-    (normalizedData, avgRatingByUser)
+    normalizedData
   }
 
   /**
@@ -95,8 +94,8 @@ package object predictions {
    * This class contains the functions that generate the results used only in section B.
    */
   class BSolvers(train: Array[Rating], test: Array[Rating]) {
-    // Apply preprocessing operations on the train and test
-    val (normalizedTrain, _) = preprocess(train)
+    // Apply preprocessing operations on the train set
+    val normalizedTrain = normalizeRatings(train)
 
     def getGlobalAvg: Double = {
       mean(train.map(x => x.rating))
@@ -171,5 +170,13 @@ package object predictions {
     def getMAE(predictions: Array[Rating], trueRatings: Array[Rating]): Double = {
       (predictions zip trueRatings).map({ case (x, y) => abs(x.rating - y.rating) }).sum / trueRatings.length
     }
+  }
+
+  /**
+   * This class contains the functions that generate the results used only in section P.
+   */
+  class PSolvers(train: Array[Rating], test: Array[Rating]) {
+    // Apply preprocessing operations on the train set
+    val preprocessedTrain = normalizeRatings(train)
   }
 }
