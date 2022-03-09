@@ -34,8 +34,8 @@ object Personalized extends App {
   println("Loading test data from: " + conf.test())
   val test = load(spark, conf.test(), conf.separator()).collect()
 
-  // Initialize the solvers for questions in P
-  val solvers = new PSolvers(train, test)
+  // Initialize the solver for questions related to the Personalized algorithm.
+  val solver = new PersonalizedSolver(train, test)
 
   // Save answers as JSON
   def printToFile(content: String,
@@ -60,17 +60,17 @@ object Personalized extends App {
           "3.Measurements" -> ujson.Num(conf.num_measurements())
         ),
         "P.1" -> ujson.Obj(
-          "1.PredUser1Item1" -> ujson.Num(solvers.getPredUserItem(1, 1, similarity = solvers.userUniformSimilarity)), // Prediction of item 1 for user 1 (similarity 1 between users)
+          "1.PredUser1Item1" -> ujson.Num(solver.getPredUserItem(1, 1, similarity = solver.userUniformSimilarity)), // Prediction of item 1 for user 1 (similarity 1 between users)
           "2.OnesMAE" -> ujson.Num(0.0) // MAE when using similarities of 1 between all users
         ),
         "P.2" -> ujson.Obj(
-          "1.AdjustedCosineUser1User2" -> ujson.Num(solvers.userCosineSimilarity(1, 2)), // Similarity between user 1 and user 2 (adjusted Cosine)
-          "2.PredUser1Item1" -> ujson.Num(solvers.getPredUserItem(1, 1, solvers.userCosineSimilarity)), // Prediction item 1 for user 1 (adjusted cosine)
+          "1.AdjustedCosineUser1User2" -> ujson.Num(solver.userCosineSimilarity(1, 2)), // Similarity between user 1 and user 2 (adjusted Cosine)
+          "2.PredUser1Item1" -> ujson.Num(solver.getPredUserItem(1, 1, solver.userCosineSimilarity)), // Prediction item 1 for user 1 (adjusted cosine)
           "3.AdjustedCosineMAE" -> ujson.Num(0.0) // MAE when using adjusted cosine similarity
         ),
         "P.3" -> ujson.Obj(
-          "1.JaccardUser1User2" -> ujson.Num(solvers.userJaccardSimilarity(1, 2)), // Similarity between user 1 and user 2 (jaccard similarity)
-          "2.PredUser1Item1" -> ujson.Num(solvers.getPredUserItem(1, 1, solvers.userJaccardSimilarity)), // Prediction item 1 for user 1 (jaccard)
+          "1.JaccardUser1User2" -> ujson.Num(solver.userJaccardSimilarity(1, 2)), // Similarity between user 1 and user 2 (jaccard similarity)
+          "2.PredUser1Item1" -> ujson.Num(solver.getPredUserItem(1, 1, solver.userJaccardSimilarity)), // Prediction item 1 for user 1 (jaccard)
           "3.JaccardPersonalizedMAE" -> ujson.Num(0.0) // MAE when using jaccard similarity
         )
       )
