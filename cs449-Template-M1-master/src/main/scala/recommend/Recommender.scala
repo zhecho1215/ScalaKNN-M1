@@ -1,14 +1,10 @@
 package recommend
 
-import org.rogach.scallop._
-import org.apache.spark.rdd.RDD
-import ujson._
-
+import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
-import org.apache.log4j.Logger
-import org.apache.log4j.Level
-
+import org.rogach.scallop._
 import shared.predictions._
+import ujson._
 
 class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
   val data = opt[String](required = true)
@@ -23,47 +19,52 @@ object Recommender extends App {
   Logger.getLogger("org").setLevel(Level.OFF)
   Logger.getLogger("akka").setLevel(Level.OFF)
   val spark = SparkSession.builder()
-    .master("local[1]")
-    .getOrCreate()
-  spark.sparkContext.setLogLevel("ERROR") 
+                          .master("local[1]")
+                          .getOrCreate()
+  spark.sparkContext.setLogLevel("ERROR")
 
   println("")
   println("******************************************************")
 
-  var conf = new Conf(args) 
-  println("Loading data from: " + conf.data()) 
+  var conf = new Conf(args)
+  println("Loading data from: " + conf.data())
   val data = load(spark, conf.data(), conf.separator()).collect()
   assert(data.length == 100000, "Invalid data")
 
-  println("Loading personal data from: " + conf.personal()) 
+  println("Loading personal data from: " + conf.personal())
   val personalFile = spark.sparkContext.textFile(conf.personal())
   val personal = personalFile.map(l => {
-      val cols = l.split(",").map(_.trim)
-      if (cols(0) == "id") 
-        Rating(944,0,0.0)
-      else 
-        if (cols.length < 3) 
-          Rating(944, cols(0).toInt, 0.0)
-        else
-          Rating(944, cols(0).toInt, cols(2).toDouble)
+    val cols = l.split(",").map(_.trim)
+    if (cols(0) == "id")
+      Rating(944, 0, 0.0)
+    else if (cols.length < 3)
+      Rating(944, cols(0).toInt, 0.0)
+    else
+      Rating(944, cols(0).toInt, cols(2).toDouble)
   }).filter(r => r.rating != 0).collect()
   val movieNames = personalFile.map(l => {
-      val cols = l.split(",").map(_.trim)
-      if (cols(0) == "id") (0, "header")
-      else (cols(0).toInt, cols(1).toString)
+    val cols = l.split(",").map(_.trim)
+    if (cols(0) == "id") (0, "header")
+    else (cols(0).toInt, cols(1).toString)
   }).collect().toMap
 
+  // Initialize the solver for questions related to the Recommender section
+  val solver = new RecommenderSolver(data ++ personal, movieNames, k = 300)
 
   // Save answers as JSON
-  def printToFile(content: String, 
+  def printToFile(content: String,
                   location: String = "./answers.json") =
-    Some(new java.io.PrintWriter(location)).foreach{
-      f => try{
-        f.write(content)
-      } finally{ f.close }
-  }
+    Some(new java.io.PrintWriter(location)).foreach {
+      f =>
+        try {
+          f.write(content)
+        } finally {
+          f.close
+        }
+    }
+
   conf.json.toOption match {
-    case None => ; 
+    case None => ;
     case Some(jsonFile) => {
       val answers = ujson.Obj(
         "Meta" -> ujson.Obj(
@@ -71,14 +72,15 @@ object Recommender extends App {
           "personal" -> conf.personal()
         ),
         "R.1" -> ujson.Obj(
-          "PredUser1Item1" -> ujson.Num(0.0) // Prediction for user 1 of item 1
+          // Prediction for user 1 of item 1
+          "PredUser1Item1" -> ujson.Num(solver.getPredUserItem(item = 1, user = 1, solver.userCosineSimilarity))
         ),
-          // IMPORTANT: To break ties and ensure reproducibility of results,
-          // please report the top-3 recommendations that have the smallest
-          // movie identifier.
+        // IMPORTANT: To break ties and ensure reproducibility of results,
+        // please report the top-3 recommendations that have the smallest
+        // movie identifier.
 
-        "R.2" -> List((254, 0.0), (338, 0.0), (615, 0.0)).map(x => ujson.Arr(x._1, movieNames(x._1), x._2))
-       )
+        "R.2" -> solver.getRecommendations(user = 944, top = 3).map(x => ujson.Arr(x._1, movieNames(x._1), x._2))
+      )
       val json = write(answers, 4)
 
       println(json)
