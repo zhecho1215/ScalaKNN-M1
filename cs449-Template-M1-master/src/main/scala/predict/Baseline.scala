@@ -36,7 +36,7 @@ object Baseline extends App {
   val test = load(spark, conf.test(), conf.separator()).collect()
 
   // Initialize the solvers for questions in B
-  val solvers = new BSolvers(train, test)
+  val solvers = new BaselineSolver(train, test)
 
   // Get timing for each of the 4 methods
   var timings = scala.collection.mutable.Map.empty[String, Seq[Double]]

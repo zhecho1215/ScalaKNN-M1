@@ -2,6 +2,7 @@ package shared
 
 import scala.collection.mutable
 import scala.math.{abs, pow, sqrt}
+import scala.util.Sorting
 
 package object predictions {
   def timingInMs(f: () => Double): (Double, Double) = {
@@ -123,9 +124,9 @@ package object predictions {
   }
 
   /**
-   * This class contains the functions that generate the results used only in section B.
+   * This class contains the functions that generate the results used only in the Baseline predictions.
    */
-  class BSolvers(train: Array[Rating], test: Array[Rating]) {
+  class BaselineSolver(train: Array[Rating], test: Array[Rating]) {
     // Apply preprocessing operations on the train set
     val normalizedTrain: Array[Rating] = normalizeData(train)
 
@@ -197,16 +198,18 @@ package object predictions {
     }
   }
 
-  
+
   /**
-   * This class contains the functions that generate the results used only in section P.
+   * This class contains the functions that generate the results used only in the Personalized predictions.
    */
-  class PSolvers(train: Array[Rating], test: Array[Rating]) {
+  class PersonalizedSolver(train: Array[Rating], test: Array[Rating]) {
     // Apply preprocessing operations on the train set to make the process faster
     val normalizedTrain: Array[Rating] = normalizeData(train)
     val preprocessedTrain: Array[Rating] = preprocessData(normalizedTrain)
     val ratingsByUser: Map[Int, Array[Rating]] = preprocessedTrain.groupBy(x => x.user)
-    var userSimilarities: mutable.Map[(Int, Int), Double] = mutable.Map[(Int, Int), Double]()
+    // Store the user cosine similarities for a faster run
+    var userCosineSimilarities: mutable.Map[Int, mutable.Map[Int, Double]] = mutable
+      .Map[Int, mutable.Map[Int, Double]]().withDefaultValue(mutable.Map[Int, Double]().withDefaultValue(0.0))
 
     /**
      * Preprocess a rating based on the law of multiplication.
@@ -218,7 +221,7 @@ package object predictions {
     private def preprocessRating(currentRating: Rating, data: Array[Rating]): Rating = {
       val numerator = currentRating.rating
       val denominator = sqrt(data.filter(x => x.user == currentRating.user).map(x => pow(x.rating, 2)).sum)
-      var fraction: Double = 0
+      var fraction: Double = 0.0
       if (denominator != 0) {
         fraction = numerator / denominator
       }
@@ -236,13 +239,9 @@ package object predictions {
     }
 
     /**
-     * Get the uniform similarity score between two users.
-     *
-     * @param user1 The first user.
-     * @param user2 The second user.
-     * @return Always consider similarity 1.
+     * Get the uniform similarity score between two users. Always consider similarity 1.
      */
-    val userUniformSimilarity = (user1: Int, user2: Int) => 1.0
+    val userUniformSimilarity: (Int, Int) => Double = (user1: Int, user2: Int) => 1.0
 
     /**
      * Get the cosine similarity score between two users.
@@ -253,12 +252,8 @@ package object predictions {
      */
     def userCosineSimilarity(user1: Int, user2: Int): Double = {
       // Check if user similarity was already computed
-      if (userSimilarities.contains((user1, user2))) {
-        return userSimilarities((user1, user2))
-      }
-
-      if (userSimilarities.contains((user2, user1))) {
-        return userSimilarities((user1, user2))
+      if (userCosineSimilarities.contains(user1) && userCosineSimilarities(user1).contains(user2)) {
+        return userCosineSimilarities(user1)(user2)
       }
 
       // User similarity was not computed yet
@@ -266,11 +261,12 @@ package object predictions {
       val user2Ratings = ratingsByUser.getOrElse(user2, Array())
       // Combine user ratings, group them by item and only select groups that have exactly 2 members
       val intersection = (user1Ratings ++ user2Ratings).groupBy(x => x.item)
-        .filter { case (k, v) => v.length == 2 }
-        .map { case (_, v) => v }
+                                                       .filter { case (_, v) => v.length == 2 }
+                                                       .map { case (_, v) => v }
       val similarity = intersection.map(x => x(0).rating * x(1).rating).sum
       // Store similarity and return it
-      userSimilarities((user1, user2)) = similarity
+      userCosineSimilarities(user1)(user2) = similarity
+      userCosineSimilarities(user2)(user1) = similarity
       similarity
     }
 
@@ -334,4 +330,39 @@ package object predictions {
       userAvg + userItemAvgDev * scaleUserRating(userAvg + userItemAvgDev, userAvg)
     }
   }
+
+  /**
+   * This class contains the functions that generate the results used only in the Neighbourhood-based predictions.
+   */
+  class KNNSolver(train: Array[Rating], test: Array[Rating], k: Int) extends PersonalizedSolver(train, test) {
+    // Store the similarities of the k-closest neighbours for each user.
+    val KNearestUsers: mutable.Map[Int, Array[Int]] = mutable.Map[Int, Array[Int]]().withDefaultValue(Array[Int]())
+    // A list of unique users.
+    val uniqueUsers: Array[Int] = normalizedTrain.map(x => x.user).distinct
+
+    override def getUserItemAvgDev(user: Int, item: Int, similarity: (Int, Int) => Double): Double = {
+      // Check if the KNNearest users have already been found for the current user
+      if (!KNearestUsers.contains(user)) {
+        // Compute similarities for current user with every other user
+        val allUserSimilarities: Array[(Int, Double)] = uniqueUsers
+          .map(other => (other, userCosineSimilarity(user, other)))
+          .filter { case (other, _) => other != user }
+
+        // Get the sorted array of similarities
+        Sorting.stableSort(allUserSimilarities, (x: (Int, Double), y: (Int, Double)) => x._2 > y._2)
+
+        // Store the k-nearest neighbors (only the user id, the similarity is already stored in userCosineSimilarities
+        KNearestUsers(user) = allUserSimilarities.map(x => x._1).take(k)
+      }
+      
+      val relevantUserRatings = KNearestUsers(user).flatMap(other => ratingsByUser(other).filter(x => x.item == item))
+      val numerator = relevantUserRatings.map(x => similarity(user, x.user) * x.rating).sum
+      val denominator = relevantUserRatings.map(x => abs(similarity(user, x.user))).sum
+      if (denominator != 0) {
+        return numerator / denominator
+      }
+      0
+    }
+  }
 }
+
