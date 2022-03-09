@@ -1,0 +1,26 @@
+{
+    "Meta": {
+        "data": "data/ml-100k/u.data",
+        "personal": "data/personal.csv"
+    },
+    "R.1": {
+        "PredUser1Item1": 3.6819492797847744
+    },
+    "R.2": [
+        [
+            689,
+            "Jackal",
+            3.1627802059921266
+        ],
+        [
+            131,
+            "Breakfast at Tiffany's (1961)",
+            3.1609598519239626
+        ],
+        [
+            511,
+            "Lawrence of Arabia (1962)",
+            3.1477892039919264
+        ]
+    ]
+}

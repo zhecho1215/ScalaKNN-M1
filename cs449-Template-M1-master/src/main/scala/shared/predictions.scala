@@ -340,6 +340,14 @@ package object predictions {
     // A list of unique users.
     val uniqueUsers: Array[Int] = normalizedTrain.map(x => x.user).distinct
 
+    /**
+     * Returns the user-specific weighted-sum deviation for an item, based on the k-nearest neighbors.
+     *
+     * @param user       The user for which the rating will be computed.
+     * @param item       The item for which the rating will be computed.
+     * @param similarity The function that will be used to measure similarity.
+     * @return The rating.
+     */
     override def getUserItemAvgDev(user: Int, item: Int, similarity: (Int, Int) => Double): Double = {
       // Check if the KNNearest users have already been found for the current user
       if (!KNearestUsers.contains(user)) {
@@ -354,7 +362,7 @@ package object predictions {
         // Store the k-nearest neighbors (only the user id, the similarity is already stored in userCosineSimilarities
         KNearestUsers(user) = allUserSimilarities.map(x => x._1).take(k)
       }
-      
+
       val relevantUserRatings = KNearestUsers(user).flatMap(other => ratingsByUser(other).filter(x => x.item == item))
       val numerator = relevantUserRatings.map(x => similarity(user, x.user) * x.rating).sum
       val denominator = relevantUserRatings.map(x => abs(similarity(user, x.user))).sum
@@ -362,6 +370,55 @@ package object predictions {
         return numerator / denominator
       }
       0
+    }
+  }
+
+  /**
+   * This class contains the functions that generate the results used only in the Recommender predictions.
+   */
+  class RecommenderSolver(train: Array[Rating], movieNames: Map[Int, String], k: Int)
+    extends KNNSolver(train, Array(), k) {
+    /**
+     * Compare two movies to sort them descending by score and ascending by identifier on equality.
+     *
+     * @param movie1 The first movie.
+     * @param movie2 The second movie.
+     * @return Whether the first movie should be placed before the second one.
+     */
+    private def movieComparator(movie1: (Int, Double), movie2: (Int, Double)): Boolean = {
+      if (movie1._2 > movie2._2) {
+        // Movies with higher scores should be first
+        return true
+      }
+      if (movie1._2 == movie2._2 && movie1._1 < movie2._1) {
+        // Movies with equal predictions should be sorted ascending by identifier
+        return true
+      }
+      false
+    }
+
+    /**
+     * Recommend the top movies for a user using k-NN.
+     *
+     * @param user The user for which the recommendations will be made.
+     * @param top  The number of movies which will be recommended.
+     * @return A list of top movies, with the highest predicted score for the user.
+     */
+    def getRecommendations(user: Int, top: Int): List[(Int, Double)] = {
+      // Get movies that were not rated by user
+      val allMovies = movieNames.keys.toSet
+      val ratedMovies = ratingsByUser(user).map(x => x.item).toSet
+      val notRatedMovies = allMovies.diff(ratedMovies)
+      
+      // Compute predicted score for movies that were not rated
+      val allPredictions: Array[(Int, Double)] = notRatedMovies
+        .map(x => (x, getPredUserItem(item = x, user = user, userCosineSimilarity))).toArray
+
+      // Sort predictions
+      Sorting.stableSort(allPredictions, (x, y) => movieComparator(x, y))
+
+      // Return the top predictions
+      allPredictions.take(top).toList
     }
   }
 }
