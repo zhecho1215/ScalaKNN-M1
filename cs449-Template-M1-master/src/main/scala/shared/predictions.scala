@@ -197,6 +197,7 @@ package object predictions {
     }
   }
 
+  
   /**
    * This class contains the functions that generate the results used only in section P.
    */
@@ -235,13 +236,22 @@ package object predictions {
     }
 
     /**
+     * Get the uniform similarity score between two users.
+     *
+     * @param user1 The first user.
+     * @param user2 The second user.
+     * @return Always consider similarity 1.
+     */
+    val userUniformSimilarity = (user1: Int, user2: Int) => 1.0
+
+    /**
      * Get the cosine similarity score between two users.
      *
      * @param user1 The first user.
      * @param user2 The second user.
      * @return The cosine similarity.
      */
-    private def getUserSimilarity(user1: Int, user2: Int): Double = {
+    def userCosineSimilarity(user1: Int, user2: Int): Double = {
       // Check if user similarity was already computed
       if (userSimilarities.contains((user1, user2))) {
         return userSimilarities((user1, user2))
@@ -265,16 +275,35 @@ package object predictions {
     }
 
     /**
+     * Get the Jaccard similarity score between two users.
+     *
+     * @param user1 The first user.
+     * @param user2 The second user.
+     * @return The Jaccard similarity
+     */
+    def userJaccardSimilarity(user1: Int, user2: Int): Double = {
+      val user1Ratings = ratingsByUser.getOrElse(user1, Array()).map(x => x.item).toSet
+      val user2Ratings = ratingsByUser.getOrElse(user2, Array()).map(x => x.item).toSet
+      val itemIntersection = user1Ratings.intersect(user2Ratings).size
+      val itemUnion = user1Ratings.union(user2Ratings).size
+      if (itemUnion == 0) {
+        return 0
+      }
+      itemIntersection * 1.0 / itemUnion
+    }
+
+    /**
      * Returns the user-specific weighted-sum deviation for an item.
      *
-     * @param user The user for which the rating will be computed.
-     * @param item The item for which the rating will be computed.
+     * @param user       The user for which the rating will be computed.
+     * @param item       The item for which the rating will be computed.
+     * @param similarity The function that will be used to measure similarity.
      * @return The rating.
      */
-    def getUserItemAvgDev(user: Int, item: Int): Double = {
+    def getUserItemAvgDev(user: Int, item: Int, similarity: (Int, Int) => Double): Double = {
       val relevantUserRatings = normalizedTrain.filter(x => x.item == item && x.user != user)
-      val numerator = relevantUserRatings.map(x => getUserSimilarity(user, x.user) * x.rating).sum
-      val denominator = relevantUserRatings.map(x => abs(getUserSimilarity(user, x.user))).sum
+      val numerator = relevantUserRatings.map(x => similarity(user, x.user) * x.rating).sum
+      val denominator = relevantUserRatings.map(x => abs(similarity(user, x.user))).sum
       if (denominator != 0) {
         return numerator / denominator
       }
@@ -284,13 +313,14 @@ package object predictions {
     /**
      * Computes a prediction for an item for an user based on train data.
      *
-     * @param item The item for which the prediction will be computed.
-     * @param user The user for which the prediction will be computed.
+     * @param item       The item for which the prediction will be computed.
+     * @param user       The user for which the prediction will be computed.
+     * @param similarity The function that will be used to measure similarity.
      * @return The predicted rating.
      */
-    def getPredUserItem(item: Int, user: Int): Double = {
+    def getPredUserItem(item: Int, user: Int, similarity: (Int, Int) => Double): Double = {
       val userAvg = getUserAvg(train, user)
-      val userItemAvgDev = getUserItemAvgDev(item, user)
+      val userItemAvgDev = getUserItemAvgDev(item, user, similarity)
 
       if (userItemAvgDev == 0 || !train.exists(x => x.item == item)) {
         // No rating for i in the training set of the item average dev is 0

@@ -1,39 +1,21 @@
 {
     "Meta": {
-        "1.Train": 3,
-        "Size Train": 80000,
+        "1.Train": "data/ml-100k/u2.base",
         "2.Test": "data/ml-100k/u2.test",
-        "3.Measurements": 3
+        "3.Measurements": 1
     },
-    "B.1": {
-        "1.GlobalAvg": 3.5264625,
-        "2.User1Avg": 3.63302752293578,
-        "3.Item1Avg": 3.888268156424581,
-        "4.Item1AvgDev": 0.3027072341444875,
-        "5.PredUser1Item1": 4.046819980619529
+    "P.1": {
+        "1.PredUser1Item1": 4.046819980619529,
+        "2.OnesMAE": 0
     },
-    "B.2": {
-        "1.GlobalAvgMAE": 0.9489109899999697,
-        "2.UserAvgMAE": 0.8383401457987351,
-        "3.ItemAvgMAE": 0.8206951490543668,
-        "4.BaselineMAE": 0.7604467914538644
+    "P.2": {
+        "1.AdjustedCosineUser1User2": 0.07303711860794568,
+        "2.PredUser1Item1": 4.08702725876936,
+        "3.AdjustedCosineMAE": 0
     },
-    "B.3": {
-        "1.GlobalAvg": {
-            "average (ms)": 40756.972132999996,
-            "stddev (ms)": 1957.999428368371
-        },
-        "2.UserAvg": {
-            "average (ms)": 7012.060599666667,
-            "stddev (ms)": 57.013880224659786
-        },
-        "3.ItemAvg": {
-            "average (ms)": 7702.485466666666,
-            "stddev (ms)": 772.6921072253468
-        },
-        "4.Baseline": {
-            "average (ms)": 15408.4044,
-            "stddev (ms)": 1485.0568121855208
-        }
+    "P.3": {
+        "1.JaccardUser1User2": 0.03187250996015936,
+        "2.PredUser1Item1": 4.098236648361599,
+        "3.JaccardPersonalizedMAE": 0
     }
 }
