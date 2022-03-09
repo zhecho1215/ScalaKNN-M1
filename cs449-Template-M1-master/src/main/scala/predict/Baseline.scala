@@ -106,7 +106,6 @@ object Baseline extends App {
         //            "stddev (ms)" -> ujson.Num(std(timings("Baseline"))) // Datatype of answer: Double
         //          )
         //        )
-      ,
 
 //      "B.3" -> ujson.Obj(
 //          "1.GlobalAvg" -> ujson.Obj(
