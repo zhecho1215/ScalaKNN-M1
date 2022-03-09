@@ -75,17 +75,17 @@ object Baseline extends App {
           "3.Measurements" -> ujson.Num(conf.num_measurements())
         ),
         "B.1" -> ujson.Obj(
-          "1.GlobalAvg" -> solvers.getGlobalAvg, // Datatype of answer: Double
-          "2.User1Avg" -> solvers.getUserAvg(1), // Datatype of answer: Double
-          "3.Item1Avg" -> solvers.getItemAvg(1), // Datatype of answer: Double
-          "4.Item1AvgDev" -> solvers.getItemAvgDev(1), // Datatype of answer: Double
-          "5.PredUser1Item1" -> solvers.getPredUserItem(1, 1) // Datatype of answer: Double
+          "1.GlobalAvg" -> ujson.Num(getGlobalAvg(train)), // Datatype of answer: Double
+          "2.User1Avg" -> ujson.Num(getUserAvg(train, 1)), // Datatype of answer: Double
+          "3.Item1Avg" -> ujson.Num(getItemAvg(train, 1)), // Datatype of answer: Double
+          "4.Item1AvgDev" -> ujson.Num(solvers.getItemAvgDev(1)), // Datatype of answer: Double
+          "5.PredUser1Item1" -> ujson.Num(solvers.getPredUserItem(1, 1)) // Datatype of answer: Double
         ),
         "B.2" -> ujson.Obj(
-          "1.GlobalAvgMAE" -> solvers.getMAE(solvers.getGlobalPredictions, test), // Datatype of answer: Double
-          "2.UserAvgMAE" -> solvers.getMAE(solvers.getUserAvgPredictions, test), // Datatype of answer: Double
-          "3.ItemAvgMAE" -> solvers.getMAE(solvers.getItemAvgPredictions, test), // Datatype of answer: Double
-          "4.BaselineMAE" -> solvers.getMAE(solvers.getBaselinePredictions, test) // Datatype of answer: Double
+          "1.GlobalAvgMAE" -> ujson.Num(solvers.getMAE(solvers.getGlobalPredictions, test)), // Datatype of answer: Double
+          "2.UserAvgMAE" -> ujson.Num(solvers.getMAE(solvers.getUserAvgPredictions, test)), // Datatype of answer: Double
+          "3.ItemAvgMAE" -> ujson.Num(solvers.getMAE(solvers.getItemAvgPredictions, test)), // Datatype of answer: Double
+          "4.BaselineMAE" -> ujson.Num(solvers.getMAE(solvers.getBaselinePredictions, test)) // Datatype of answer: Double
         ),
         "B.3" -> ujson.Obj(
           "1.GlobalAvg" -> ujson.Obj(
