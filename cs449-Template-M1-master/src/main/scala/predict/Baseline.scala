@@ -40,17 +40,17 @@ object Baseline extends App {
 
   // Get timing for each of the 4 methods
   var timings = scala.collection.mutable.Map.empty[String, Seq[Double]]
-//  for (predictor: String <- Array("Baseline", "Global", "User", "Item")) {
-//    val measurements = (1 to conf.num_measurements()).map(x => timingInMs(() => {
-//      predictor match {
-//        case "Baseline" => solvers.getMAE(solvers.getBaselinePredictions, test)
-//        case "Global" => solvers.getMAE(solvers.getGlobalPredictions, test)
-//        case "User" => solvers.getMAE(solvers.getUserAvgPredictions, test)
-//        case "Item" => solvers.getMAE(solvers.getItemAvgPredictions, test)
-//      }
-//    }))
-//    timings(predictor) = measurements.map(t => t._2)
-  //}
+  for (predictor: String <- Array("Baseline", "Global", "User", "Item")) {
+    val measurements = (1 to conf.num_measurements()).map(x => timingInMs(() => {
+      predictor match {
+        case "Baseline" => solvers.getPredictorMAE(solvers.getBaseline)
+        case "Global" => solvers.getPredictorMAE(solvers.getGlobalAvg)
+        case "User" => solvers.getPredictorMAE(solvers.getUserAvg)
+        case "Item" => solvers.getPredictorMAE(solvers.getItemAvg)
+      }
+    }))
+    timings(predictor) = measurements.map(t => t._2)
+  }
 
   // Save answers as JSON
   def printToFile(content: String,
@@ -82,30 +82,30 @@ object Baseline extends App {
           "5.PredUser1Item1" -> solvers.getBaseline(train)(1, 1) // Datatype of answer: Double
         ),
 
-               "B.2" -> ujson.Obj(
-                 "1.GlobalAvgMAE" -> solvers.getPredictorMAE(solvers.getGlobalAvg), // Datatype of answer: Double
-                 "2.UserAvgMAE" -> solvers.getPredictorMAE(solvers.getUserAvg), // Datatype of answer: Double
-                 "3.ItemAvgMAE" -> solvers.getPredictorMAE(solvers.getItemAvg), // Datatype of answer: Double
-                 "4.BaselineMAE" -> solvers.getPredictorMAE(solvers.getBaseline) // Datatype of answer: Double
-               )
-        //        "B.3" -> ujson.Obj(
-        //          "1.GlobalAvg" -> ujson.Obj(
-        //            "average (ms)" -> ujson.Num(mean(timings("Global"))), // Datatype of answer: Double
-        //            "stddev (ms)" -> ujson.Num(std(timings("Global"))) // Datatype of answer: Double
-        //          ),
-        //          "2.UserAvg" -> ujson.Obj(
-        //            "average (ms)" -> ujson.Num(mean(timings("User"))), // Datatype of answer: Double
-        //            "stddev (ms)" -> ujson.Num(std(timings("User"))) // Datatype of answer: Double
-        //          ),
-        //          "3.ItemAvg" -> ujson.Obj(
-        //            "average (ms)" -> ujson.Num(mean(timings("Item"))), // Datatype of answer: Double
-        //            "stddev (ms)" -> ujson.Num(std(timings("Item"))) // Datatype of answer: Double
-        //          ),
-        //          "4.Baseline" -> ujson.Obj(
-        //            "average (ms)" -> ujson.Num(mean(timings("Baseline"))), // Datatype of answer: Double
-        //            "stddev (ms)" -> ujson.Num(std(timings("Baseline"))) // Datatype of answer: Double
-        //          )
-        //        )
+        "B.2" -> ujson.Obj(
+         "1.GlobalAvgMAE" -> solvers.getPredictorMAE(solvers.getGlobalAvg), // Datatype of answer: Double
+         "2.UserAvgMAE" -> solvers.getPredictorMAE(solvers.getUserAvg), // Datatype of answer: Double
+         "3.ItemAvgMAE" -> solvers.getPredictorMAE(solvers.getItemAvg), // Datatype of answer: Double
+         "4.BaselineMAE" -> solvers.getPredictorMAE(solvers.getBaseline) // Datatype of answer: Double
+        ),
+        "B.3" -> ujson.Obj(
+          "1.GlobalAvg" -> ujson.Obj(
+            "average (ms)" -> ujson.Num(mean(timings("Global"))), // Datatype of answer: Double
+            "stddev (ms)" -> ujson.Num(std(timings("Global"))) // Datatype of answer: Double
+          ),
+          "2.UserAvg" -> ujson.Obj(
+            "average (ms)" -> ujson.Num(mean(timings("User"))), // Datatype of answer: Double
+            "stddev (ms)" -> ujson.Num(std(timings("User"))) // Datatype of answer: Double
+          ),
+          "3.ItemAvg" -> ujson.Obj(
+            "average (ms)" -> ujson.Num(mean(timings("Item"))), // Datatype of answer: Double
+            "stddev (ms)" -> ujson.Num(std(timings("Item"))) // Datatype of answer: Double
+          ),
+          "4.Baseline" -> ujson.Obj(
+            "average (ms)" -> ujson.Num(mean(timings("Baseline"))), // Datatype of answer: Double
+            "stddev (ms)" -> ujson.Num(std(timings("Baseline"))) // Datatype of answer: Double
+          )
+        )
 
 //      "B.3" -> ujson.Obj(
 //          "1.GlobalAvg" -> ujson.Obj(
