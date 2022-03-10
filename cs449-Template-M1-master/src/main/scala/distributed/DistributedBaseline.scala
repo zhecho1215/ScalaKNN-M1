@@ -3,11 +3,9 @@ package distributed
 import org.rogach.scallop._
 import org.apache.spark.rdd.RDD
 import ujson._
-
 import org.apache.spark.sql.SparkSession
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
-
 import scala.math
 import shared.predictions._
 
@@ -48,6 +46,7 @@ object DistributedBaseline extends App {
   }))
   val timings = measurements.map(t => t._2) // Retrieve the timing measurements
 
+  val solvers = new DistributedSolvers(train, test)
   // Save answers as JSON
   def printToFile(content: String, 
                   location: String = "./answers.json") =
@@ -67,12 +66,12 @@ object DistributedBaseline extends App {
           "4.Measurements" -> conf.num_measurements()
         ),
         "D.1" -> ujson.Obj(
-          "1.GlobalAvg" -> ujson.Num(0.0), // Datatype of answer: Double
-          "2.User1Avg" -> ujson.Num(0.0),  // Datatype of answer: Double
-          "3.Item1Avg" -> ujson.Num(0.0),   // Datatype of answer: Double
-          "4.Item1AvgDev" -> ujson.Num(0.0), // Datatype of answer: Double,
-          "5.PredUser1Item1" -> ujson.Num(0.0), // Datatype of answer: Double
-          "6.Mae" -> ujson.Num(0.0) // Datatype of answer: Double
+          "1.GlobalAvg" -> solvers.getGlobalAvg(train)(0,0), // Datatype of answer: Double
+          "2.User1Avg" -> solvers.getUserAvg(train)(1,0), // Datatype of answer: Double
+          "3.Item1Avg" -> solvers.getItemAvg(train)(0,1), // Datatype of answer: Double
+          "4.Item1AvgDev" -> solvers.getItemAvgDev(train,1), // Datatype of answer: Double
+          "5.PredUser1Item1" -> solvers.getBaseline(train)(1, 1)
+//          "6.Mae" ->solvers.getPredictorMAE(solvers.getBaseline)  // Datatype of answer: Double// Datatype of answer: Double
         ),
         "D.2" -> ujson.Obj(
           "1.DistributedBaseline" -> ujson.Obj(

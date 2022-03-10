@@ -147,30 +147,48 @@ package object predictions {
    * This class contains the functions that generate the results used only in the Baseline predictions.
    */
   class BaselineSolver(train: Seq[Rating], test: Seq[Rating]) {
+
+    val globalAverage: Double = mean(train.map(x => x.rating))
+
     // Apply preprocessing operations on the train and test
     val (normalizedTrain, _) = preprocess(train)
-
-    //    def getGlobalAvg(train: Seq[Rating]): Double = {
-    //      mean(train.map(x => x.rating))
-    //    }
-    //
-    //    def getItemAvg(train: Seq[Rating],item: Int): Double = {
-    //      if (!train.exists(x => x.item == item)) getGlobalAvg(train)
-    //      else mean(train.filter(x => x.item == item).map(x => x.rating))
-    //    }
-    //
-    //    def getUserAvg(train: Seq[Rating],user: Int): Double = {
-    //      mean(train.filter(x => x.user == user).map(x => x.rating))
-    //    }
-
-
+    /**
+     *
+     * @param train Training set of Ratings
+     * @param item The ID of the item
+     * @return The average deviation
+     */
     def getItemAvgDev(train: Seq[Rating],item: Int): Double = {
       mean(normalizedTrain.filter(x => x.item == item).map(x => x.rating))
     }
 
     /**
+     * Predictor function with given signature which always returns the global average
+     * @param train Training data
+     * @return Global average of train data
+     */
+    def getGlobalAvg (train: Seq[Rating]): (Int, Int) => Double = {
+      def ratingPrediction(user: Int, item: Int): Double = {
+        globalAverage
+      }
+      ratingPrediction
+    }
+    /**
+     * Predictor function with given signature which always returns the item average given an item ID
+     * @param train Training data
+     * @return Item average in training data
+     */
+    def getItemAvg (train: Seq[Rating]): (Int, Int) => Double = {
+      def ratingPrediction(user: Int, item: Int): Double = {
+        if (!train.exists(x => x.item == item)) globalAverage
+        else mean(train.filter(x => x.item == item).map(x => x.rating))
+      }
+      ratingPrediction
+    }
+
+    /**
      * Predictor function
-     * @param train
+     * @param train Training data
      * @return A function which takes the
      */
     def getUserAvg (train: Seq[Rating]): (Int, Int) => Double = {
@@ -179,8 +197,14 @@ package object predictions {
       }
       ratingPrediction
     }
+
     /**
-     * Computes a prediction for an item for an user based on train data.
+     * Method to compute a prediction according to Equation (5)
+     *
+     * @param train Training data
+     * @param item ID of item
+     * @param user ID of user
+     * @return A prediction for an item for an user based on train data.
      */
     def getPredUserItem(train: Seq[Rating], item: Int, user: Int): Double = {
       val userAvg = getUserAvg(train)(user,0)
@@ -199,13 +223,10 @@ package object predictions {
     }
 
     /**
-     * Returns all of the predicted scores on the test set.
+     *
+     * @param train Training data
+     * @return A predicted score using the baseline approach (Equation 5)
      */
-    //    def getBaselinePredictionsMAE(train : Seq[Rating], test: Seq[Rating]) = {
-    //      val predictions = test.map(x => Rating(user = x.user, item = x.item, rating = getPredUserItem(train,item = x.item, user = x.user)))
-    //      getMAE(predictions,test)
-    //    }
-
     def getBaseline (train: Seq[Rating]): (Int, Int) => Double = {
       def ratingPrediction(user: Int, item: Int): Double = {
         getPredUserItem(train = train, item = item, user = user)
@@ -213,59 +234,19 @@ package object predictions {
       ratingPrediction
     }
 
-    /**
-     * Returns Seq of Ratings as large as the test set filled with the global average value
-     */
-    //    def getGlobalPredictionsMAE(train : Seq[Rating], test: Seq[Rating]): Double  = {
-    //      val predictions = test.map(x => Rating(user = x.user, item = x.item, rating = getGlobalAvg(train)))
-    //      getMAE(predictions,test)
-    //    }
-
-    def getGlobalAvg (train: Seq[Rating]): (Int, Int) => Double = {
-      def ratingPrediction(user: Int, item: Int): Double = {
-        mean(train.map(x => x.rating))
-      }
-      ratingPrediction
-    }
 
     /**
-     * Returns Seq of Ratings as large as the test set filled with the average rating of the given user
+     * Extracts predictions based on the given predictor function and returns MAE
+     * @param predictorFunc Estimates the prediction for given item and user
+     * @return Mean Average Error between the predictions and the test.
      */
-    //    def getUserAvgPredictionsMAE(train : Seq[Rating], test: Seq[Rating]): Double = {
-    //      val predictions = test.map(x => Rating(user = x.user, item = x.item, rating = getUserAvg(train)(x.user)))
-    //      getMAE(predictions,test)
-    //    }
-
-
-    /**
-     * Returns Seq of Ratings as large as the test set filled with the average rating of the given movie
-     */
-    //    def getItemAvgPredictionsMAE(train : Seq[Rating], test: Seq[Rating]): Double = {
-    //
-    //      val predictions = test.map(x => Rating(user = x.user, item = x.item, rating = getItemAvg(train)(x.item)))
-    //      getMAE(predictions,test)
-    //    }
-    def getItemAvg (train: Seq[Rating]): (Int, Int) => Double = {
-      def ratingPrediction(user: Int, item: Int): Double = {
-        if (!train.exists(x => x.item == item)) getGlobalAvg(train)(0,0)
-        else mean(train.filter(x => x.item == item).map(x => x.rating))
-      }
-      ratingPrediction
-    }
-    /**
-     * Mean Average Error between the predictions and the trueRatings.
-     */
-    def getMAE(predictions: Seq[Rating], trueRatings: Seq[Rating]): Double = {
-      (predictions zip trueRatings).map({ case (x, y) => abs(x.rating - y.rating) }).sum / trueRatings.length
-    }
-
     def getPredictorMAE(predictorFunc: Seq[Rating] => (Int, Int) => Double): Double = {
       val predictions = test.map(x => Rating(user = x.user, item = x.item, rating = predictorFunc(train)(x.user, x.item)))
-      getMAE(predictions,test)
+      (predictions zip test).map({ case (x, y) => abs(x.rating - y.rating) }).sum / test.length
     }
   }
 
-  class DSolvers(train: RDD[Rating], test: RDD[Rating]) {
+  class DistributedSolvers(train: RDD[Rating], test: RDD[Rating]) {
 
     //TODO: Pass normalized train
     def getItemAvgDev(train: RDD[Rating],item: Int): Double = {
@@ -273,8 +254,19 @@ package object predictions {
     }
 
     /**
+     * Predictor function with given signature which always returns the global average
+     * @param train Training data
+     * @return Global average of train data
+     */
+    def getGlobalAvg (train: RDD[Rating]): (Int, Int) => Double = {
+      def ratingPrediction(user: Int, item: Int): Double = {
+        train.map(x => x.rating).mean()
+      }
+      ratingPrediction
+    }
+    /**
      * Predictor function
-     * @param train
+     * @param train Training data
      * @return A function which takes the
      */
     def getUserAvg (train: RDD[Rating]): (Int, Int) => Double = {
@@ -283,6 +275,12 @@ package object predictions {
       }
       ratingPrediction
     }
+
+    /**
+     * Predictor function with given signature which always returns the item average given an item ID
+     * @param train Training data
+     * @return Item average in training data
+     */
     def getItemAvg (train: RDD[Rating]): (Int, Int) => Double = {
       def ratingPrediction(user: Int, item: Int): Double = {
         if (train.filter(x => x.item == item).count() == 0) getGlobalAvg(train)(0,0)
@@ -291,7 +289,12 @@ package object predictions {
       ratingPrediction
     }
     /**
-     * Computes a prediction for an item for an user based on train data.
+     * Method to compute a prediction according to Equation (5)
+     *
+     * @param train Training data
+     * @param item ID of item
+     * @param user ID of user
+     * @return A prediction for an item for an user based on train data.
      */
     def getPredUserItem(train: RDD[Rating], item: Int, user: Int): Double = {
       val userAvg = getUserAvg(train)(user,0)
@@ -310,13 +313,10 @@ package object predictions {
     }
 
     /**
-     * Returns all of the predicted scores on the test set.
+     *
+     * @param train Training data
+     * @return A predicted score using the baseline approach (Equation 5)
      */
-    //    def getBaselinePredictionsMAE(train : Seq[Rating], test: Seq[Rating]) = {
-    //      val predictions = test.map(x => Rating(user = x.user, item = x.item, rating = getPredUserItem(train,item = x.item, user = x.user)))
-    //      getMAE(predictions,test)
-    //    }
-
     def getBaseline (train: RDD[Rating]): (Int, Int) => Double = {
       def ratingPrediction(user: Int, item: Int): Double = {
         getPredUserItem(train = train, item = item, user = user)
@@ -324,49 +324,15 @@ package object predictions {
       ratingPrediction
     }
 
-    /**
-     * Returns Seq of Ratings as large as the test set filled with the global average value
-     */
-    //    def getGlobalPredictionsMAE(train : Seq[Rating], test: Seq[Rating]): Double  = {
-    //      val predictions = test.map(x => Rating(user = x.user, item = x.item, rating = getGlobalAvg(train)))
-    //      getMAE(predictions,test)
-    //    }
-
-    def getGlobalAvg (train: RDD[Rating]): (Int, Int) => Double = {
-      def ratingPrediction(user: Int, item: Int): Double = {
-        train.map(x => x.rating).mean()
-      }
-      ratingPrediction
-    }
 
     /**
-     * Returns Seq of Ratings as large as the test set filled with the average rating of the given user
+     * Extracts predictions based on the given predictor function and returns MAE
+     * @param predictorFunc Estimates the prediction for given item and user
+     * @return Mean Average Error between the predictions and the test.
      */
-    //    def getUserAvgPredictionsMAE(train : Seq[Rating], test: Seq[Rating]): Double = {
-    //      val predictions = test.map(x => Rating(user = x.user, item = x.item, rating = getUserAvg(train)(x.user)))
-    //      getMAE(predictions,test)
-    //    }
-
-
-    /**
-     * Returns Seq of Ratings as large as the test set filled with the average rating of the given movie
-     */
-    //    def getItemAvgPredictionsMAE(train : Seq[Rating], test: Seq[Rating]): Double = {
-    //
-    //      val predictions = test.map(x => Rating(user = x.user, item = x.item, rating = getItemAvg(train)(x.item)))
-    //      getMAE(predictions,test)
-    //    }
-
-    /**
-     * Mean Average Error between the predictions and the trueRatings.
-     */
-    def getMAE(predictions: RDD[Rating], trueRatings: RDD[Rating]): Double = {
-      (predictions zip trueRatings).map({ case (x, y) => abs(x.rating - y.rating) }).sum / trueRatings.count()
-    }
-
     def getPredictorMAE(predictorFunc: RDD[Rating] => (Int, Int) => Double): Double = {
       val predictions = test.map(x => Rating(user = x.user, item = x.item, rating = predictorFunc(train)(x.user, x.item)))
-      getMAE(predictions,test)
+      (predictions zip test).map({ case (x, y) => abs(x.rating - y.rating) }).sum / test.count()
     }
   }
 
