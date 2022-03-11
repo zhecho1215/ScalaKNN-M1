@@ -43,10 +43,10 @@ object Baseline extends App {
   for (predictor: String <- Array("Baseline", "Global", "User", "Item")) {
     val measurements = (1 to conf.num_measurements()).map(x => timingInMs(() => {
       predictor match {
-        case "Baseline" => solvers.getPredictorMAE(solvers.getBaseline)
-        case "Global" => solvers.getPredictorMAE(solvers.getGlobalAvg)
-        case "User" => solvers.getPredictorMAE(solvers.getUserAvg)
-        case "Item" => solvers.getPredictorMAE(solvers.getItemAvg)
+        case "Baseline" => solvers.getMAE(solvers.getBaseline)
+        case "Global" => solvers.getMAE(solvers.getGlobalAvg)
+        case "User" => solvers.getMAE(solvers.getUserAvg)
+        case "Item" => solvers.getMAE(solvers.getItemAvg)
       }
     }))
     timings(predictor) = measurements.map(t => t._2)
@@ -83,10 +83,10 @@ object Baseline extends App {
         ),
 
         "B.2" -> ujson.Obj(
-          "1.GlobalAvgMAE" -> solvers.getPredictorMAE(solvers.getGlobalAvg), // Datatype of answer: Double
-          "2.UserAvgMAE" -> solvers.getPredictorMAE(solvers.getUserAvg), // Datatype of answer: Double
-          "3.ItemAvgMAE" -> solvers.getPredictorMAE(solvers.getItemAvg), // Datatype of answer: Double
-          "4.BaselineMAE" -> solvers.getPredictorMAE(solvers.getBaseline) // Datatype of answer: Double
+          "1.GlobalAvgMAE" -> solvers.getMAE(solvers.getGlobalAvg), // Datatype of answer: Double
+          "2.UserAvgMAE" -> solvers.getMAE(solvers.getUserAvg), // Datatype of answer: Double
+          "3.ItemAvgMAE" -> solvers.getMAE(solvers.getItemAvg), // Datatype of answer: Double
+          "4.BaselineMAE" -> solvers.getMAE(solvers.getBaseline) // Datatype of answer: Double
         ),
         "B.3" -> ujson.Obj(
           "1.GlobalAvg" -> ujson.Obj(
