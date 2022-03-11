@@ -21,8 +21,8 @@ object Personalized extends App {
   Logger.getLogger("org").setLevel(Level.OFF)
   Logger.getLogger("akka").setLevel(Level.OFF)
   val spark = SparkSession.builder()
-    .master("local[1]")
-    .getOrCreate()
+                          .master("local[1]")
+                          .getOrCreate()
   spark.sparkContext.setLogLevel("ERROR")
 
   println("")
@@ -60,18 +60,29 @@ object Personalized extends App {
           "3.Measurements" -> ujson.Num(conf.num_measurements())
         ),
         "P.1" -> ujson.Obj(
-          "1.PredUser1Item1" -> ujson.Num(solver.getPredUserItem(1, 1, similarity = solver.userUniformSimilarity)), // Prediction of item 1 for user 1 (similarity 1 between users)
-          "2.OnesMAE" -> ujson.Num(0.0) // MAE when using similarities of 1 between all users
+          // Prediction of item 1 for user 1 (similarity 1 between users)
+          "1.PredUser1Item1" -> ujson.Num(solver.getPredUserItem(1, 1, similarity = solver.userUniformSimilarity)),
+          // MAE when using similarities of 1 between all users
+          "2.OnesMAE" -> ujson.Num(0.0)
         ),
         "P.2" -> ujson.Obj(
-          "1.AdjustedCosineUser1User2" -> ujson.Num(solver.userCosineSimilarity(1, 2)), // Similarity between user 1 and user 2 (adjusted Cosine)
-          "2.PredUser1Item1" -> ujson.Num(solver.getPredUserItem(1, 1, solver.userCosineSimilarity)), // Prediction item 1 for user 1 (adjusted cosine)
-          "3.AdjustedCosineMAE" -> ujson.Num(0.0) // MAE when using adjusted cosine similarity
+          // Similarity between user 1 and user 2 (adjusted Cosine)
+          "1.AdjustedCosineUser1User2" -> ujson.Num(solver.userCosineSimilarity(1, 2)),
+          // Prediction item 1 for user 1 (adjusted cosine)
+          "2.PredUser1Item1" -> ujson.Num(solver.getPredUserItem(1, 1, solver.userCosineSimilarity)),
+          // MAE when using adjusted cosine similarity
+          "3.AdjustedCosineMAE" -> ujson.Num(0.0)
         ),
         "P.3" -> ujson.Obj(
-          "1.JaccardUser1User2" -> ujson.Num(solver.userJaccardSimilarity(1, 2)), // Similarity between user 1 and user 2 (jaccard similarity)
-          "2.PredUser1Item1" -> ujson.Num(solver.getPredUserItem(1, 1, solver.userJaccardSimilarity)), // Prediction item 1 for user 1 (jaccard)
-          "3.JaccardPersonalizedMAE" -> ujson.Num(0.0) // MAE when using jaccard similarity
+          // Similarity between user 1 and user 2 (jaccard similarity)
+          "1.JaccardUser1User2" ->
+
+            ujson.Num(solver.userJaccardSimilarity(1, 2)),
+          // Prediction item 1 for user 1 (jaccard)
+          "2.PredUser1Item1" -> ujson
+            .Num(solver.getPredUserItem(1, 1, solver.userJaccardSimilarity)),
+          // MAE when using jaccard similarity
+          "3.JaccardPersonalizedMAE" -> ujson.Num(0.0)
         )
       )
       val json = write(answers, 4)
