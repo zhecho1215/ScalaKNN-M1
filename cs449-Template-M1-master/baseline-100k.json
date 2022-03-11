@@ -20,19 +20,19 @@
     },
     "B.3": {
         "1.GlobalAvg": {
-            "average (ms)": 5.9542,
+            "average (ms)": 4.943301,
             "stddev (ms)": 0
         },
         "2.UserAvg": {
-            "average (ms)": 7229.3612,
+            "average (ms)": 12075.5846,
             "stddev (ms)": 0
         },
         "3.ItemAvg": {
-            "average (ms)": 7031.0157,
+            "average (ms)": 13907.3489,
             "stddev (ms)": 0
         },
         "4.Baseline": {
-            "average (ms)": 22946.0634,
+            "average (ms)": 29638.231301,
             "stddev (ms)": 0
         }
     }

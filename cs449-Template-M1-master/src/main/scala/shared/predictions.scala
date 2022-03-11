@@ -240,11 +240,8 @@ package object predictions {
      * @param predictorFunc Estimates the prediction for given item and user.
      * @return Mean Average Error between the predictions and the test.
      */
-    def getPredictorMAE(predictorFunc: Seq[Rating] => (Int, Int) => Double): Double = {
-      val predictor = predictorFunc(train)
-      val predictions = test
-        .map(x => Rating(user = x.user, item = x.item, rating = predictor(x.user, x.item)))
-      (predictions zip test).map({ case (x, y) => abs(x.rating - y.rating) }).sum / test.length
+    def getMAE(predictorFunc: Seq[Rating] => (Int, Int) => Double): Double = {
+      test.map(x => abs(predictorFunc(train)(x.user, x.item) - x.rating)).sum / test.length
     }
   }
 
@@ -479,6 +476,19 @@ package object predictions {
       }
 
       userAvg + userItemAvgDev * scaleUserRating(userAvg + userItemAvgDev, userAvg)
+    }
+
+    /**
+     * Extracts predictions based on the given predictor function and returns MAE
+     *
+     * @param predictorFunc Estimates the prediction for given item and user.
+     * @return Mean Average Error between the predictions and the test.
+     */
+    def getPredictorMAE(predictorFunc: Seq[Rating] => (Int, Int) => Double): Double = {
+      val predictor = predictorFunc(train)
+      val predictions = test
+        .map(x => Rating(user = x.user, item = x.item, rating = predictor(x.user, x.item)))
+      (predictions zip test).map({ case (x, y) => abs(x.rating - y.rating) }).sum / test.length
     }
   }
 
