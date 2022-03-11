@@ -111,6 +111,7 @@ package object predictions {
      * @return The average deviation
      */
     def getItemAvgDev(train: Seq[Rating], item: Int): Double = {
+      println(train.count(x => x.item == item))
       mean(normalizedTrain.filter(x => x.item == item).map(x => x.rating))
     }
 
@@ -394,6 +395,7 @@ package object predictions {
      */
     def getUserItemAvgDev(user: Int, item: Int, similarity: (Int, Int) => Double): Double = {
       // TODO: ask whether we should ignore the ratings given by our user
+      println(train.count(x => x.item == item))
       val relevantUserRatings = normalizedTrain.filter(x => x.item == item)
       val numerator = relevantUserRatings.map(x => similarity(user, x.user) * x.rating).sum
       val denominator = relevantUserRatings.map(x => abs(similarity(user, x.user))).sum
