@@ -20,8 +20,8 @@ object Baseline extends App {
   Logger.getLogger("org").setLevel(Level.OFF)
   Logger.getLogger("akka").setLevel(Level.OFF)
   val spark = SparkSession.builder()
-    .master("local[1]")
-    .getOrCreate()
+                          .master("local[1]")
+                          .getOrCreate()
   spark.sparkContext.setLogLevel("ERROR")
 
   println("")
@@ -75,18 +75,18 @@ object Baseline extends App {
           "3.Measurements" -> ujson.Num(conf.num_measurements())
         ),
         "B.1" -> ujson.Obj(
-          "1.GlobalAvg" -> solvers.getGlobalAvg(train)(0,0), // Datatype of answer: Double
-          "2.User1Avg" -> solvers.getUserAvg(train)(1,0), // Datatype of answer: Double
-          "3.Item1Avg" -> solvers.getItemAvg(train)(0,1), // Datatype of answer: Double
-          "4.Item1AvgDev" -> solvers.getItemAvgDev(train,1), // Datatype of answer: Double
+          "1.GlobalAvg" -> solvers.getGlobalAvg(train)(0, 0), // Datatype of answer: Double
+          "2.User1Avg" -> solvers.getUserAvg(train)(1, 0), // Datatype of answer: Double
+          "3.Item1Avg" -> solvers.getItemAvg(train)(0, 1), // Datatype of answer: Double
+          "4.Item1AvgDev" -> solvers.getItemAvgDev(train, 1), // Datatype of answer: Double
           "5.PredUser1Item1" -> solvers.getBaseline(train)(1, 1) // Datatype of answer: Double
         ),
 
         "B.2" -> ujson.Obj(
-         "1.GlobalAvgMAE" -> solvers.getPredictorMAE(solvers.getGlobalAvg), // Datatype of answer: Double
-         "2.UserAvgMAE" -> solvers.getPredictorMAE(solvers.getUserAvg), // Datatype of answer: Double
-         "3.ItemAvgMAE" -> solvers.getPredictorMAE(solvers.getItemAvg), // Datatype of answer: Double
-         "4.BaselineMAE" -> solvers.getPredictorMAE(solvers.getBaseline) // Datatype of answer: Double
+          "1.GlobalAvgMAE" -> solvers.getPredictorMAE(solvers.getGlobalAvg), // Datatype of answer: Double
+          "2.UserAvgMAE" -> solvers.getPredictorMAE(solvers.getUserAvg), // Datatype of answer: Double
+          "3.ItemAvgMAE" -> solvers.getPredictorMAE(solvers.getItemAvg), // Datatype of answer: Double
+          "4.BaselineMAE" -> solvers.getPredictorMAE(solvers.getBaseline) // Datatype of answer: Double
         ),
         "B.3" -> ujson.Obj(
           "1.GlobalAvg" -> ujson.Obj(
@@ -106,25 +106,6 @@ object Baseline extends App {
             "stddev (ms)" -> ujson.Num(std(timings("Baseline"))) // Datatype of answer: Double
           )
         )
-
-//      "B.3" -> ujson.Obj(
-//          "1.GlobalAvg" -> ujson.Obj(
-//            "average (ms)" -> ujson.Num(mean(timings("Global"))), // Datatype of answer: Double
-//            "stddev (ms)" -> ujson.Num(std(timings("Global"))) // Datatype of answer: Double
-//          ),
-//          "2.UserAvg" -> ujson.Obj(
-//            "average (ms)" -> ujson.Num(mean(timings("User"))), // Datatype of answer: Double
-//            "stddev (ms)" -> ujson.Num(std(timings("User"))) // Datatype of answer: Double
-//          ),
-//          "3.ItemAvg" -> ujson.Obj(
-//            "average (ms)" -> ujson.Num(mean(timings("Item"))), // Datatype of answer: Double
-//            "stddev (ms)" -> ujson.Num(std(timings("Item"))) // Datatype of answer: Double
-//          ),
-//          "4.Baseline" -> ujson.Obj(
-//            "average (ms)" -> ujson.Num(mean(timings("Baseline"))), // Datatype of answer: Double
-//            "stddev (ms)" -> ujson.Num(std(timings("Baseline"))) // Datatype of answer: Double
-//          )
-        //)
       )
 
       val json = ujson.write(answers, 4)
