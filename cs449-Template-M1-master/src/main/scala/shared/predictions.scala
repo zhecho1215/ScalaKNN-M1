@@ -246,7 +246,7 @@ package object predictions {
      * @param train Training data.
      * @return A predicted score using the baseline approach (Equation 5).
      */
-    def getBaseline(train: Seq[Rating]): (Int, Int) => Double = {
+    def getBaselineAri(train: Seq[Rating]): (Int, Int) => Double = {
       (user: Int, item: Int) => getPredUserItem(item = item, user = user)
     }
 
@@ -474,7 +474,7 @@ package object predictions {
         // No rating for i in the training set of the item average dev is 0
         if (!train.exists(x => x.user == user)) {
           // The user has no rating
-          return getGlobalAvg(train)(0, 0)
+          return getGlobalAverage(train)(0, 0)
         }
         return userAvg
       }
