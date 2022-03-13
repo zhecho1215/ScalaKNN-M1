@@ -36,10 +36,12 @@ object kNN extends App {
 
   // Initialize the solver for questions related to the KNN algorithm with k = 10
   val solver10 = new KNNSolver(train, test, 10)
+  // Initialize the solver for questions related to the KNN algorithm with k = 300
+  val solver300 = new KNNSolver(train, test, 300)
 
   val measurements = (1 to conf.num_measurements()).map(x => timingInMs(() => {
-    Thread.sleep(1000) // Do everything here from train and test
-    42 // Output answer as last value
+    // solver300.getMAE(similarity = solver300.userCosineSimilarity)
+    42
   }))
   val timings = measurements.map(t => t._2) // Retrieve the timing measurements
 
@@ -66,20 +68,23 @@ object kNN extends App {
         ),
         "N.1" -> ujson.Obj(
           // Similarity between user 1 and user 1 (k=10)
-          "1.k10u1v1" -> ujson.Num(solver10.userCosineSimilarity(1, 1)),
+          "1.k10u1v1" -> ujson.Num(solver10.userSimilarity(1, 1)),
           // Similarity between user 1 and user 864 (k=10)
-          "2.k10u1v864" -> ujson.Num(solver10.userCosineSimilarity(1, 864)),
+          "2.k10u1v864" -> ujson.Num(solver10.userSimilarity(1, 864)),
           // Similarity between user 1 and user 886 (k=10)
-          "3.k10u1v886" -> ujson.Num(solver10.userCosineSimilarity(1, 886)),
+          "3.k10u1v886" -> ujson.Num(solver10.userSimilarity(1, 886)),
           // Prediction of item 1 for user 1 (k=10)
           "4.PredUser1Item1" -> ujson.Num(solver10.getPredUserItem(item = 1, user = 1, solver10.userCosineSimilarity))
         ),
         "N.2" -> ujson.Obj(
-          "1.kNN-Mae" -> List(10, 30, 50, 100, 200, 300, 400, 800, 943).map(k =>
+          // TODO: add the rest of the k values.
+          "1.kNN-Mae" -> List(10).map(k => {
+            val solver = new KNNSolver(train, test, k)
             List(
               k,
-              0.0 // Compute MAE
+              solver.getMAE(similarity = solver.userCosineSimilarity)
             )
+          }
           ).toList
         ),
         "N.3" -> ujson.Obj(
