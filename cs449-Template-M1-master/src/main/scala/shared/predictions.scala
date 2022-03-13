@@ -137,14 +137,14 @@ package object predictions {
           })))
       })
     }
-    def getGlobalAverage(train: Seq[shared.predictions.Rating]): (Int, Int) => Double = {
+    def getGlobalAverage(train: Seq[Rating]): (Int, Int) => Double = {
       val globAvg = globalAverage(train)
       (user: Int, item: Int) => {
         globAvg
       }
     }
 
-    def getAverageUserRating(train: Seq[shared.predictions.Rating]): (Int, Int) => Double = {
+    def getAverageUserRating(train: Seq[Rating]): (Int, Int) => Double = {
       lazy val global_average = globalAverage(train)
       val averageByUserMap = averageRatingByUser(train)
       (user: Int, item: Int) => {
@@ -152,7 +152,7 @@ package object predictions {
       }
     }
 
-    def getAverageItemRating(train: Seq[shared.predictions.Rating]): (Int, Int) => Double = {
+    def getAverageItemRating(train: Seq[Rating]): (Int, Int) => Double = {
       lazy val global_average = globalAverage(train)
       val averageByUserMap = averageRatingByUser(train)
       val averageByItemMap = averageRatingByItem(train)
