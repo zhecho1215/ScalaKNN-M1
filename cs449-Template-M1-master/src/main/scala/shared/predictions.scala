@@ -98,8 +98,90 @@ package object predictions {
    */
   class BaselineSolver(train: Seq[Rating], test: Seq[Rating]) {
 
-    val globalAverage: Double = mean(train.map(x => x.rating))
+    /**
+     * Predictor function with given signature which always returns the global average
+     *
+     * @param train Training data
+     * @return Global average of train data
+     */
+    def globalAverage(train: Seq[Rating]): Double = {
+      mean(train.map(rating => rating.rating))
+    }
 
+    def averageRatingByUser(train: Seq[Rating]): Map[Int, Double] = {
+      train.map(x => (x.item, x.user, x.rating)).groupBy({
+        case (_, user, _) => user}).map({
+        case (user, seq) => (user, mean(seq.map({
+          case (_, _, rating) => rating
+        })))
+      })
+    }
+
+    def averageRatingByItem(train: Seq[Rating]): Map[Int, Double] = {
+      train.map(x => (x.item, x.user, x.rating)).groupBy({
+        case (item,_,_) => item}).map({
+        case (item, seq) => (item, mean(seq.map({
+          case (_,_, rating) => rating
+        })))
+      })
+    }
+
+    def averageDeviationByItem(train: Seq[Rating], averageRatingByUser: Map[Int, Double]): Map[Int, Double] = {
+      train.map(x => (x.item, x.user, x.rating)).groupBy({
+        case (item, _,_) => item}).map({
+        case (item, seq) =>
+          (item, mean(seq.map({
+            case (_, user, rating) =>
+              val avgRating = averageRatingByUser(user)
+              (rating - avgRating) / scaleUserRating(rating, avgRating)
+          })))
+      })
+    }
+    def getGlobalAverage(train: Seq[shared.predictions.Rating]): (Int, Int) => Double = {
+      val globAvg = globalAverage(train)
+      (user: Int, item: Int) => {
+        globAvg
+      }
+    }
+
+    def getAverageUserRating(train: Seq[shared.predictions.Rating]): (Int, Int) => Double = {
+      lazy val global_average = globalAverage(train)
+      val averageByUserMap = averageRatingByUser(train)
+      (user: Int, item: Int) => {
+        averageByUserMap.getOrElse(user, global_average)
+      }
+    }
+
+    def getAverageItemRating(train: Seq[shared.predictions.Rating]): (Int, Int) => Double = {
+      lazy val global_average = globalAverage(train)
+      val averageByUserMap = averageRatingByUser(train)
+      val averageByItemMap = averageRatingByItem(train)
+      (user: Int, item: Int) => {
+        lazy val average_rating_user = averageByUserMap.getOrElse(user, global_average)
+        averageByItemMap.getOrElse(item, average_rating_user)
+      }
+    }
+
+    def getBaseline(train: Seq[shared.predictions.Rating]): (Int, Int) => Double = {
+      lazy val global_average = globalAverage(train)
+      val averageByUserMap = averageRatingByUser(train)
+      val deviations = averageDeviationByItem(train, averageByUserMap)
+      (user: Int, item: Int) => {
+        val avgRating = averageByUserMap.getOrElse(user, global_average)
+        val avgDeviation = deviations.getOrElse(item, 0.0)
+        avgRating + avgDeviation * scaleUserRating(avgRating + avgDeviation, avgRating)
+      }
+    }
+
+    /**
+     * Extracts predictions based on the given predictor function and returns MAE
+     *
+     * @param predictorFunc Estimates the prediction for given item and user.
+     * @return Mean Average Error between the predictions and the test.
+     */
+    def getMAEBaseline(predictorFunc: (Int, Int) => Double): Double = {
+      mean(test.map(x => (predictorFunc(x.user, x.item) - x.rating).abs))
+    }
     // Apply preprocessing operations on the train and test
     val normalizedTrain: Seq[Rating] = normalizeData(train)
     val normalizedRatingsByUser: Map[Int, Seq[Rating]] = normalizedTrain.groupBy(x => x.user)
@@ -115,20 +197,6 @@ package object predictions {
     }
 
     /**
-     * Predictor function with given signature which always returns the global average
-     *
-     * @param train Training data
-     * @return Global average of train data
-     */
-    def getGlobalAvg(train: Seq[Rating]): (Int, Int) => Double = {
-      def ratingPrediction(user: Int, item: Int): Double = {
-        globalAverage
-      }
-
-      ratingPrediction
-    }
-
-    /**
      * Get the average score per item.
      *
      * @param train Training data
@@ -136,7 +204,7 @@ package object predictions {
      */
     def getItemAvg(train: Seq[Rating]): (Int, Int) => Double = {
       (user: Int, item: Int) =>
-        if (!train.exists(x => x.item == item)) globalAverage
+        if (!train.exists(x => x.item == item)) globalAverage(train)
         else mean(train.filter(x => x.item == item).map(x => x.rating))
     }
 
@@ -164,7 +232,7 @@ package object predictions {
         // No rating for i in the training set of the item average dev is 0
         if (!train.exists(x => x.user == user)) {
           // The user has no rating
-          return getGlobalAvg(train)(0, 0)
+          return globalAverage(train)
         }
         return userAvg
       }

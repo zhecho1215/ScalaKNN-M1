@@ -43,10 +43,10 @@ object Baseline extends App {
   for (predictor: String <- Array("Baseline", "Global", "User", "Item")) {
     val measurements = (1 to conf.num_measurements()).map(x => timingInMs(() => {
       predictor match {
-        case "Baseline" => solvers.getMAE(solvers.getBaseline)
-        case "Global" => solvers.getMAE(solvers.getGlobalAvg)
-        case "User" => solvers.getMAE(solvers.getUserAvg)
-        case "Item" => solvers.getMAE(solvers.getItemAvg)
+        case "Baseline" => solvers.getMAEBaseline(solvers.getBaseline(train))
+        case "Global" => solvers.getMAEBaseline(solvers.getGlobalAverage(train))
+        case "User" => solvers.getMAEBaseline(solvers.getAverageUserRating(train))
+        case "Item" => solvers.getMAEBaseline(solvers.getAverageItemRating(train))
       }
     }))
     timings(predictor) = measurements.map(t => t._2)
@@ -75,18 +75,18 @@ object Baseline extends App {
           "3.Measurements" -> ujson.Num(conf.num_measurements())
         ),
         "B.1" -> ujson.Obj(
-          "1.GlobalAvg" -> solvers.getGlobalAvg(train)(0, 0), // Datatype of answer: Double
-          "2.User1Avg" -> solvers.getUserAvg(train)(1, 0), // Datatype of answer: Double
-          "3.Item1Avg" -> solvers.getItemAvg(train)(0, 1), // Datatype of answer: Double
-          "4.Item1AvgDev" -> solvers.getItemAvgDev(train, 1), // Datatype of answer: Double
+          "1.GlobalAvg" -> solvers.globalAverage(train), // Datatype of answer: Double
+          "2.User1Avg" -> solvers.getAverageUserRating(train)(1, 0), // Datatype of answer: Double
+          "3.Item1Avg" -> solvers.getAverageItemRating(train)(0, 1), // Datatype of answer: Double
+          "4.Item1AvgDev" -> solvers.averageDeviationByItem(train, solvers.averageRatingByUser(train))(1), // Datatype of answer: Double
           "5.PredUser1Item1" -> solvers.getBaseline(train)(1, 1) // Datatype of answer: Double
         ),
 
         "B.2" -> ujson.Obj(
-          "1.GlobalAvgMAE" -> solvers.getMAE(solvers.getGlobalAvg), // Datatype of answer: Double
-          "2.UserAvgMAE" -> solvers.getMAE(solvers.getUserAvg), // Datatype of answer: Double
-          "3.ItemAvgMAE" -> solvers.getMAE(solvers.getItemAvg), // Datatype of answer: Double
-          "4.BaselineMAE" -> solvers.getMAE(solvers.getBaseline) // Datatype of answer: Double
+          "1.GlobalAvgMAE" -> solvers.getMAEBaseline(solvers.getGlobalAverage(train)), // Datatype of answer: Double
+          "2.UserAvgMAE" -> solvers.getMAEBaseline(solvers.getAverageUserRating(train)), // Datatype of answer: Double
+          "3.ItemAvgMAE" -> solvers.getMAEBaseline(solvers.getAverageItemRating(train)), // Datatype of answer: Double
+          "4.BaselineMAE" -> solvers.getMAEBaseline(solvers.getBaseline(train)) // Datatype of answer: Double
         ),
         "B.3" -> ujson.Obj(
           "1.GlobalAvg" -> ujson.Obj(
