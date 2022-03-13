@@ -2,7 +2,6 @@ package shared
 
 import org.apache.spark.rdd.RDD
 
-import scala.collection.mutable
 import scala.math.{abs, pow, sqrt}
 import scala.util.Sorting
 
@@ -103,6 +102,7 @@ package object predictions {
 
     // Apply preprocessing operations on the train and test
     val normalizedTrain: Seq[Rating] = normalizeData(train)
+    val normalizedRatingsByUser: Map[Int, Seq[Rating]] = normalizedTrain.groupBy(x => x.user)
 
     /**
      *
@@ -111,7 +111,6 @@ package object predictions {
      * @return The average deviation
      */
     def getItemAvgDev(train: Seq[Rating], item: Int): Double = {
-      println(train.count(x => x.item == item))
       mean(normalizedTrain.filter(x => x.item == item).map(x => x.rating))
     }
 
@@ -300,13 +299,10 @@ package object predictions {
   /**
    * This class contains the functions that generate the results used only in the Personalized predictions.
    */
-  class PersonalizedSolver(train: Array[Rating], test: Array[Rating]) extends BaselineSolver(train, test) {
+  class PersonalizedSolver(train: Seq[Rating], test: Seq[Rating]) extends BaselineSolver(train, test) {
     // Apply preprocessing operations on the train set to make the process faster
     val preprocessedTrain: Seq[Rating] = preprocessData(normalizedTrain)
-    val ratingsByUser: Map[Int, Seq[Rating]] = preprocessedTrain.groupBy(x => x.user)
-    // Store the user cosine similarities for a faster run
-    var userCosineSimilarities: mutable.Map[Int, mutable.Map[Int, Double]] = mutable
-      .Map[Int, mutable.Map[Int, Double]]().withDefaultValue(mutable.Map[Int, Double]().withDefaultValue(0.0))
+    val preprocessedRatingsByUser: Map[Int, Seq[Rating]] = preprocessedTrain.groupBy(x => x.user)
 
     /**
      * Preprocess a rating based on the law of multiplication.
@@ -348,22 +344,13 @@ package object predictions {
      * @return The cosine similarity.
      */
     def userCosineSimilarity(user1: Int, user2: Int): Double = {
-      // Check if user similarity was already computed
-      if (userCosineSimilarities.contains(user1) && userCosineSimilarities(user1).contains(user2)) {
-        return userCosineSimilarities(user1)(user2)
-      }
-
-      // User similarity was not computed yet
-      val user1Ratings = ratingsByUser.getOrElse(user1, Seq())
-      val user2Ratings = ratingsByUser.getOrElse(user2, Seq())
+      val user1Ratings = preprocessedRatingsByUser.getOrElse(user1, Seq())
+      val user2Ratings = preprocessedRatingsByUser.getOrElse(user2, Seq())
       // Combine user ratings, group them by item and only select groups that have exactly 2 members
       val intersection = (user1Ratings ++ user2Ratings).groupBy(x => x.item)
                                                        .filter { case (_, v) => v.length == 2 }
                                                        .map { case (_, v) => v }
       val similarity = intersection.map(x => x.head.rating * x(1).rating).sum
-      // Store similarity and return it
-      userCosineSimilarities(user1)(user2) = similarity
-      userCosineSimilarities(user2)(user1) = similarity
       similarity
     }
 
@@ -375,8 +362,8 @@ package object predictions {
      * @return The Jaccard similarity
      */
     def userJaccardSimilarity(user1: Int, user2: Int): Double = {
-      val user1Ratings = ratingsByUser.getOrElse(user1, Seq()).map(x => x.item).toSet
-      val user2Ratings = ratingsByUser.getOrElse(user2, Seq()).map(x => x.item).toSet
+      val user1Ratings = preprocessedRatingsByUser.getOrElse(user1, Seq()).map(x => x.item).toSet
+      val user2Ratings = preprocessedRatingsByUser.getOrElse(user2, Seq()).map(x => x.item).toSet
       val itemIntersection = user1Ratings.intersect(user2Ratings).size
       val itemUnion = user1Ratings.union(user2Ratings).size
       if (itemUnion == 0) {
@@ -395,8 +382,7 @@ package object predictions {
      */
     def getUserItemAvgDev(user: Int, item: Int, similarity: (Int, Int) => Double): Double = {
       // TODO: ask whether we should ignore the ratings given by our user
-      println(train.count(x => x.item == item))
-      val relevantUserRatings = normalizedTrain.filter(x => x.item == item)
+      val relevantUserRatings = normalizedTrain.filter(x => x.item == item && x.user != user)
       val numerator = relevantUserRatings.map(x => similarity(user, x.user) * x.rating).sum
       val denominator = relevantUserRatings.map(x => abs(similarity(user, x.user))).sum
       if (denominator != 0) {
@@ -415,8 +401,7 @@ package object predictions {
      */
     def getPredUserItem(item: Int, user: Int, similarity: (Int, Int) => Double): Double = {
       val userAvg = getUserAvg(train)(user, 0)
-      val userItemAvgDev = getUserItemAvgDev(item, user, similarity)
-
+      val userItemAvgDev = getUserItemAvgDev(user = user, item = item, similarity = similarity)
       if (userItemAvgDev == 0 || !train.exists(x => x.item == item)) {
         // No rating for i in the training set of the item average dev is 0
         if (!train.exists(x => x.user == user)) {
@@ -443,11 +428,39 @@ package object predictions {
   /**
    * This class contains the functions that generate the results used only in the Neighbourhood-based predictions.
    */
-  class KNNSolver(train: Array[Rating], test: Array[Rating], k: Int) extends PersonalizedSolver(train, test) {
-    // Store the similarities of the k-closest neighbours for each user.
-    val KNearestUsers: mutable.Map[Int, Seq[Int]] = mutable.Map[Int, Seq[Int]]().withDefaultValue(Seq[Int]())
+  class KNNSolver(train: Seq[Rating], test: Seq[Rating], k: Int) extends PersonalizedSolver(train, test) {
     // A list of unique users.
     val uniqueUsers: Seq[Int] = normalizedTrain.map(x => x.user).distinct
+    // Store the similarities of the k-closest neighbours for each user.
+    val KNearestUsers: Map[Int, Seq[Int]] = uniqueUsers.map(x => x -> getKNearestUsers(x)).toMap
+
+    private def getKNearestUsers(user: Int): Seq[Int] = {
+      // Compute similarities for current user with every other user
+      val allUserSimilarities: Seq[(Int, Double)] = uniqueUsers
+        .map(other => (other, userCosineSimilarity(user, other)))
+        .filter { case (other, _) => other != user }
+
+      // Get the sorted array of similarities
+      val sortedUserSimilarities = Sorting
+        .stableSort(allUserSimilarities, (x: (Int, Double), y: (Int, Double)) => x._2 > y._2)
+
+      // Return the k-nearest neighbors
+      val topK = sortedUserSimilarities.map(x => x._1).take(k)
+      if (topK == null) {
+        return Seq[Int]()
+      }
+      topK
+    }
+
+    def userSimilarity(user1: Int, user2: Int): Double = {
+      if (user1 == user2) {
+        return 0
+      }
+      if (!KNearestUsers(user1).contains(user2)) {
+        return 0
+      }
+      userCosineSimilarity(user1, user2)
+    }
 
     /**
      * Returns the user-specific weighted-sum deviation for an item, based on the k-nearest neighbors.
@@ -458,23 +471,10 @@ package object predictions {
      * @return The rating.
      */
     override def getUserItemAvgDev(user: Int, item: Int, similarity: (Int, Int) => Double): Double = {
-      // Check if the KNNearest users have already been found for the current user
-      if (!KNearestUsers.contains(user)) {
-        // Compute similarities for current user with every other user
-        val allUserSimilarities: Seq[(Int, Double)] = uniqueUsers
-          .map(other => (other, userCosineSimilarity(user, other)))
-          .filter { case (other, _) => other != user }
-
-        // Get the sorted array of similarities
-        Sorting.stableSort(allUserSimilarities, (x: (Int, Double), y: (Int, Double)) => x._2 > y._2)
-
-        // Store the k-nearest neighbors (only the user id, the similarity is already stored in userCosineSimilarities
-        KNearestUsers(user) = allUserSimilarities.map(x => x._1).take(k)
-      }
-
-      val relevantUserRatings = KNearestUsers(user).flatMap(other => ratingsByUser(other).filter(x => x.item == item))
-      val numerator = relevantUserRatings.map(x => similarity(user, x.user) * x.rating).sum
-      val denominator = relevantUserRatings.map(x => abs(similarity(user, x.user))).sum
+      val relevantUserRatings = getKNearestUsers(user)
+        .flatMap(x => normalizedRatingsByUser(x).filter(y => y.item == item))
+      val numerator = relevantUserRatings.map(x => userSimilarity(user, x.user) * x.rating).sum
+      val denominator = relevantUserRatings.map(x => abs(userSimilarity(user, x.user))).sum
       if (denominator != 0) {
         return numerator / denominator
       }
@@ -485,26 +485,8 @@ package object predictions {
   /**
    * This class contains the functions that generate the results used only in the Recommender predictions.
    */
-  class RecommenderSolver(train: Array[Rating], movieNames: Map[Int, String], k: Int)
-    extends KNNSolver(train, Array(), k) {
-    /**
-     * Compare two movies to sort them descending by score and ascending by identifier on equality.
-     *
-     * @param movie1 The first movie.
-     * @param movie2 The second movie.
-     * @return Whether the first movie should be placed before the second one.
-     */
-    private def movieComparator(movie1: (Int, Double), movie2: (Int, Double)): Boolean = {
-      if (movie1._2 > movie2._2) {
-        // Movies with higher scores should be first
-        return true
-      }
-      if (movie1._2 == movie2._2 && movie1._1 < movie2._1) {
-        // Movies with equal predictions should be sorted ascending by identifier
-        return true
-      }
-      false
-    }
+  class RecommenderSolver(train: Seq[Rating], movieNames: Map[Int, String], k: Int)
+    extends KNNSolver(train, Seq(), k) {
 
     /**
      * Recommend the top movies for a user using k-NN.
@@ -516,7 +498,7 @@ package object predictions {
     def getRecommendations(user: Int, top: Int): List[(Int, Double)] = {
       // Get movies that were not rated by user
       val allMovies = movieNames.keys.toSet
-      val ratedMovies = ratingsByUser(user).map(x => x.item).toSet
+      val ratedMovies = preprocessedRatingsByUser(user).map(x => x.item).toSet
       val notRatedMovies = allMovies.diff(ratedMovies)
 
       // Compute predicted score for movies that were not rated
@@ -524,7 +506,8 @@ package object predictions {
         .map(x => (x, getPredUserItem(item = x, user = user, userCosineSimilarity))).toArray
 
       // Sort predictions
-      Sorting.stableSort(allPredictions, (x, y) => movieComparator(x, y))
+      scala.util.Sorting.stableSort(allPredictions,
+        (e1: (Int, Double), e2: (Int, Double)) => e1._2 > e2._2 || e1._2 == e2._2 && e1._1 < e2._1)
 
       // Return the top predictions
       allPredictions.take(top).toList

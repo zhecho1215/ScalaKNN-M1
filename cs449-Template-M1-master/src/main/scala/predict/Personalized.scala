@@ -48,8 +48,7 @@ object Personalized extends App {
           f.close
         }
     }
-
-  // TODO: Add get MAE.
+  
   conf.json.toOption match {
     case None => ;
     case Some(jsonFile) => {
