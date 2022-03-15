@@ -68,7 +68,8 @@ object Personalized extends App {
           // Similarity between user 1 and user 2 (adjusted Cosine)
           "1.AdjustedCosineUser1User2" -> ujson.Num(solver.userCosineSimilarity(1, 2)),
           // Prediction item 1 for user 1 (adjusted cosine)
-          "2.PredUser1Item1" -> ujson.Num(solver.personalizedPredictor(solver.userCosineSimilarity)(1, 1)),
+          "2.PredUser1Item1" ->
+            ujson.Num(solver.personalizedPredictor(similarityFunc = solver.userCosineSimilarity)(1, 1)),
           // MAE when using adjusted cosine similarity
           "3.AdjustedCosineMAE" -> ujson.Num(solver.getMAE(similarityFunc = solver.userCosineSimilarity))
         ),
@@ -76,7 +77,8 @@ object Personalized extends App {
           // Similarity between user 1 and user 2 (jaccard similarity)
           "1.JaccardUser1User2" -> ujson.Num(solver.userJaccardSimilarity(1, 2)),
           // Prediction item 1 for user 1 (jaccard)
-          "2.PredUser1Item1" -> ujson.Num(solver.personalizedPredictor(solver.userJaccardSimilarity)(1, 1)),
+          "2.PredUser1Item1" ->
+            ujson.Num(solver.personalizedPredictor(similarityFunc = solver.userJaccardSimilarity)(1, 1)),
           // MAE when using jaccard similarity
           "3.JaccardPersonalizedMAE" -> ujson.Num(solver.getMAE(similarityFunc = solver.userJaccardSimilarity))
         )

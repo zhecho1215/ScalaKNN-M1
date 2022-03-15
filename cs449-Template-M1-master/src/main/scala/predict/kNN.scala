@@ -74,7 +74,8 @@ object kNN extends App {
           // Similarity between user 1 and user 886 (k=10)
           "3.k10u1v886" -> ujson.Num(solver.kNearestSimilarity(1, 886)),
           // Prediction of item 1 for user 1 (k=10)
-          "4.PredUser1Item1" -> ujson.Num(solver.personalizedPredictor(solver.userCosineSimilarity)(1, 1))
+          "4.PredUser1Item1" ->
+            ujson.Num(solver.personalizedPredictor(similarityFunc = solver.userCosineSimilarity)(1, 1))
         ),
         "N.2" -> ujson.Obj(
           "1.kNN-Mae" -> List(10, 30, 50, 100, 200, 300, 400, 800, 943).map(k =>
