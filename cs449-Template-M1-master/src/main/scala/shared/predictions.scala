@@ -49,54 +49,47 @@ package object predictions {
     }
   }
 
-  /**
-   * Function that normalizes the ratings of a dataset.
-   *
-   * @param data The input dataset, with non-normalized ratings.
-   * @return The normalized ratings.
-   */
-  def normalizeData(data: Seq[Rating]): Seq[Rating] = {
-    // Group all ratings by user and compute the average rating for each user
-    val avgRatingByUser = data.groupBy(x => x.user).map {
-      case (k, v) => (k, mean(v.map(x => x.rating)))
-    }
-
-    // Normalize each rating
-    val normalizedData = data.map(x => normalizeRating(x, avgRatingByUser(x.user)))
-    normalizedData
-  }
-
-  /**
-   * Function that normalizes a single rating.
-   *
-   * @param row       The input rating, a row in the dataset.
-   * @param avgRating The average rating of the user.
-   * @return The normalized rating.
-   */
-  def normalizeRating(row: Rating, avgRating: Double): Rating = {
-    val normalized_rating = (row.rating - avgRating) / scaleUserRating(row.rating, avgRating)
-    Rating(row.user, row.item, normalized_rating)
-  }
-
-  /**
-   * Function 'scale' which allows for computation of normalized deviation as defined by Equation 2
-   *
-   * @param currRating The rating for item i, given by user u
-   * @param avgRating  The average rating, given by user u
-   * @return A scaled rating
-   */
-  def scaleUserRating(currRating: Double, avgRating: Double): Double = {
-    if (currRating > avgRating) 5 - avgRating
-    else if (currRating < avgRating) avgRating - 1
-    else 1
-  }
-
   case class Rating(user: Int, item: Int, rating: Double)
 
   /**
    * This class contains the functions that generate the results used only in the Baseline predictions.
    */
-  class BaselineSolver(train: Seq[Rating], test: Seq[Rating]) {
+  class BaselineSolver(test: Seq[Rating]) {
+    // Apply preprocessing operations on the train and test
+    val globalAverage: Seq[Rating] => Double = (train: Seq[Rating]) => mean(train.map(x => x.rating))
+    val userAvg: Seq[Rating] => Map[Int, Double] = (train: Seq[Rating]) => train.groupBy(x => x.user).map {
+      case (k, v) => (k, mean(v.map(x => x.rating)))
+    }
+    val itemAvg: Seq[Rating] => Map[Int, Double] = (train: Seq[Rating]) => train.groupBy(x => x.item).map {
+      case (k, v) => (k, mean(v.map(x => x.rating)))
+    }
+
+    /**
+     * Function that normalizes the ratings of a dataset.
+     *
+     * @param data The input dataset, with non-normalized ratings.
+     * @return The normalized ratings.
+     */
+    def normalizeData(train: Seq[Rating]): Seq[Rating] = {
+      val avgRatingByUser = userAvg(train)
+      // Normalize each rating
+      val normalizedData = train.map(x => Rating(x.user, x.item,
+        (x.rating - avgRatingByUser(x.user)) / scaleUserRating(x.rating, avgRatingByUser(x.user))))
+      normalizedData
+    }
+
+    /**
+     * Function 'scale' which allows for computation of normalized deviation as defined by Equation 2
+     *
+     * @param currRating The rating for item i, given by user u
+     * @param avgRating  The average rating, given by user u
+     * @return A scaled rating
+     */
+    def scaleUserRating(currRating: Double, avgRating: Double): Double = {
+      if (currRating > avgRating) 5 - avgRating
+      else if (currRating < avgRating) avgRating - 1
+      else 1
+    }
 
     /**
      * Predictor function with given signature which always returns the global average
@@ -104,108 +97,9 @@ package object predictions {
      * @param train Training data
      * @return Global average of train data
      */
-    def globalAverage(train: Seq[Rating]): Double = {
-      mean(train.map(rating => rating.rating))
-    }
-
-    def averageRatingByUser(train: Seq[Rating]): Map[Int, Double] = {
-      train.map(x => (x.item, x.user, x.rating)).groupBy({
-        case (_, user, _) => user}).map({
-        case (user, seq) => (user, mean(seq.map({
-          case (_, _, rating) => rating
-        })))
-      })
-    }
-
-    def averageRatingByItem(train: Seq[Rating]): Map[Int, Double] = {
-      train.map(x => (x.item, x.user, x.rating)).groupBy({
-        case (item,_,_) => item}).map({
-        case (item, seq) => (item, mean(seq.map({
-          case (_,_, rating) => rating
-        })))
-      })
-    }
-
-    def averageDeviationByItem(train: Seq[Rating], averageRatingByUser: Map[Int, Double]): Map[Int, Double] = {
-      train.map(x => (x.item, x.user, x.rating)).groupBy({
-        case (item, _,_) => item}).map({
-        case (item, seq) =>
-          (item, mean(seq.map({
-            case (_, user, rating) =>
-              val avgRating = averageRatingByUser(user)
-              (rating - avgRating) / scaleUserRating(rating, avgRating)
-          })))
-      })
-    }
-    def getGlobalAverage(train: Seq[Rating]): (Int, Int) => Double = {
-      val globAvg = globalAverage(train)
-      (user: Int, item: Int) => {
-        globAvg
-      }
-    }
-
-    def getAverageUserRating(train: Seq[Rating]): (Int, Int) => Double = {
-      lazy val global_average = globalAverage(train)
-      val averageByUserMap = averageRatingByUser(train)
-      (user: Int, item: Int) => {
-        averageByUserMap.getOrElse(user, global_average)
-      }
-    }
-
-    def getAverageItemRating(train: Seq[Rating]): (Int, Int) => Double = {
-      lazy val global_average = globalAverage(train)
-      val averageByUserMap = averageRatingByUser(train)
-      val averageByItemMap = averageRatingByItem(train)
-      (user: Int, item: Int) => {
-        lazy val average_rating_user = averageByUserMap.getOrElse(user, global_average)
-        averageByItemMap.getOrElse(item, average_rating_user)
-      }
-    }
-
-    def getBaseline(train: Seq[shared.predictions.Rating]): (Int, Int) => Double = {
-      lazy val global_average = globalAverage(train)
-      val averageByUserMap = averageRatingByUser(train)
-      val deviations = averageDeviationByItem(train, averageByUserMap)
-      (user: Int, item: Int) => {
-        val avgRating = averageByUserMap.getOrElse(user, global_average)
-        val avgDeviation = deviations.getOrElse(item, 0.0)
-        avgRating + avgDeviation * scaleUserRating(avgRating + avgDeviation, avgRating)
-      }
-    }
-
-    /**
-     * Extracts predictions based on the given predictor function and returns MAE
-     *
-     * @param predictorFunc Estimates the prediction for given item and user.
-     * @return Mean Average Error between the predictions and the test.
-     */
-    def getMAEBaseline(predictorFunc: (Int, Int) => Double): Double = {
-      mean(test.map(x => (predictorFunc(x.user, x.item) - x.rating).abs))
-    }
-    // Apply preprocessing operations on the train and test
-    val normalizedTrain: Seq[Rating] = normalizeData(train)
-    val normalizedRatingsByUser: Map[Int, Seq[Rating]] = normalizedTrain.groupBy(x => x.user)
-
-    /**
-     *
-     * @param train Training set of Ratings
-     * @param item  The ID of the item
-     * @return The average deviation
-     */
-    def getItemAvgDev(train: Seq[Rating], item: Int): Double = {
-      mean(normalizedTrain.filter(x => x.item == item).map(x => x.rating))
-    }
-
-    /**
-     * Get the average score per item.
-     *
-     * @param train Training data
-     * @return Item average in training data
-     */
-    def getItemAvg(train: Seq[Rating]): (Int, Int) => Double = {
-      (user: Int, item: Int) =>
-        if (!train.exists(x => x.item == item)) globalAverage(train)
-        else mean(train.filter(x => x.item == item).map(x => x.rating))
+    def globalAvgPredictor(train: Seq[Rating]): (Int, Int) => Double = {
+      val avgGlobal = globalAverage(train)
+      (user: Int, item: Int) => avgGlobal
     }
 
     /**
@@ -214,42 +108,73 @@ package object predictions {
      * @param train Training data.
      * @return The average score per user.
      */
-    val getUserAvg: Seq[Rating] => (Int, Int) => Double = (train: Seq[Rating]) => (user: Int, item: Int) => mean(
-      train.filter(x => x.user == user).map(x => x.rating))
+    def userAvgPredictor(train: Seq[Rating]): (Int, Int) => Double = {
+      val avgRatingByUser = userAvg(train)
+      (user: Int, item: Int) => avgRatingByUser(user)
+    }
+
+    /**
+     * Get the average score per item.
+     *
+     * @param train Training data
+     * @return Item average in training data
+     */
+    def itemAvgPredictor(train: Seq[Rating]): (Int, Int) => Double = {
+      val avgRatingByItem = itemAvg(train)
+      val avgRatingByUser = userAvg(train)
+      val avgGlobal = globalAverage(train)
+      (user: Int, item: Int) => {
+        if (!avgRatingByItem.contains(item)) {
+          if (!avgRatingByUser.contains(user)) {
+            avgGlobal
+          }
+          else {
+            avgRatingByUser(user)
+          }
+        }
+        else avgRatingByItem(item)
+      }
+    }
+
+    /**
+     * Get the average deviation score per item.
+     *
+     * @param train Training data
+     * @return Item average in training data
+     */
+    def itemAvgDev(train: Seq[Rating], item: Int): Double = {
+      val avgRatingDevByItem = itemAvg(normalizeData(train))
+      avgRatingDevByItem(item)
+    }
 
     /**
      * Method to compute a prediction according to Equation (5)
      *
-     * @param item ID of item
      * @param user ID of user
+     * @param item ID of item
      * @return A prediction for an item for an user based on train data.
      */
-    def getPredUserItem(item: Int, user: Int): Double = {
-      val userAvg = getUserAvg(train)(user, 0)
-      val itemAvgDev = getItemAvgDev(train, item)
+    def baselinePredictor(train: Seq[Rating]): (Int, Int) => Double = {
+      val avgRatingByUser = userAvg(train)
+      val avgRatingDevByItem = itemAvg(normalizeData(train))
+      val avgGlobal = globalAverage(train)
 
-      if (itemAvgDev == 0 || !train.exists(x => x.item == item)) {
-        // No rating for i in the training set of the item average dev is 0
-        if (!train.exists(x => x.user == user)) {
-          // The user has no rating
-          return globalAverage(train)
+      def prediction(user: Int, item: Int): Double = {
+        if (!avgRatingDevByItem.contains(item) || avgRatingDevByItem(item) == 0) {
+          // No rating for i in the training set of the item average dev is 0
+          if (!avgRatingByUser.contains(user)) {
+            // The user has no rating
+            return avgGlobal
+          }
+          return avgRatingByUser(user)
         }
-        return userAvg
+        val userAvg = avgRatingByUser(user)
+        val itemAvgDev = avgRatingDevByItem(item)
+        userAvg + itemAvgDev * scaleUserRating(userAvg + itemAvgDev, userAvg)
       }
 
-      userAvg + itemAvgDev * scaleUserRating(userAvg + itemAvgDev, userAvg)
+      prediction
     }
-
-    /**
-     * Returns the baseline prediction for a user and an item.
-     *
-     * @param train Training data.
-     * @return A predicted score using the baseline approach (Equation 5).
-     */
-    def getBaselineAri(train: Seq[Rating]): (Int, Int) => Double = {
-      (user: Int, item: Int) => getPredUserItem(item = item, user = user)
-    }
-
 
     /**
      * Extracts predictions based on the given predictor function and returns MAE
@@ -257,8 +182,8 @@ package object predictions {
      * @param predictorFunc Estimates the prediction for given item and user.
      * @return Mean Average Error between the predictions and the test.
      */
-    def getMAE(predictorFunc: Seq[Rating] => (Int, Int) => Double): Double = {
-      test.map(x => abs(predictorFunc(train)(x.user, x.item) - x.rating)).sum / test.length
+    def getMAE(predictorFunc: (Int, Int) => Double): Double = {
+      mean(test.map(x => (predictorFunc(x.user, x.item) - x.rating).abs))
     }
   }
 
@@ -333,7 +258,8 @@ package object predictions {
         return userAvg
       }
 
-      userAvg + itemAvgDev * scaleUserRating(userAvg + itemAvgDev, userAvg)
+      // userAvg + itemAvgDev * scaleUserRating(userAvg + itemAvgDev, userAvg)
+      42
     }
 
     /**
@@ -367,27 +293,12 @@ package object predictions {
   /**
    * This class contains the functions that generate the results used only in the Personalized predictions.
    */
-  class PersonalizedSolver(train: Seq[Rating], test: Seq[Rating]) extends BaselineSolver(train, test) {
+  class PersonalizedSolver(train: Seq[Rating], test: Seq[Rating]) extends BaselineSolver(test) {
     // Apply preprocessing operations on the train set to make the process faster
-    val preprocessedTrain: Seq[Rating] = preprocessData(normalizedTrain)
+    val normalizedRatingsByItem: Map[Int, Seq[Rating]] = normalizeData(train).groupBy(x => x.item)
+    val preprocessedTrain: Seq[Rating] = preprocessData(normalizeData(train))
+    val ratingsByUser: Map[Int, Seq[Rating]] = train.groupBy(x => x.user)
     val preprocessedRatingsByUser: Map[Int, Seq[Rating]] = preprocessedTrain.groupBy(x => x.user)
-
-    /**
-     * Preprocess a rating based on the law of multiplication.
-     *
-     * @param currentRating The initial normalized rating.
-     * @param data          The list of all ratings.
-     * @return The normalized rating.
-     */
-    private def preprocessRating(currentRating: Rating, data: Seq[Rating]): Rating = {
-      val numerator = currentRating.rating
-      val denominator = sqrt(data.filter(x => x.user == currentRating.user).map(x => pow(x.rating, 2)).sum)
-      var fraction: Double = 0.0
-      if (denominator != 0) {
-        fraction = numerator / denominator
-      }
-      Rating(user = currentRating.user, item = currentRating.item, rating = fraction)
-    }
 
     /**
      * Preprocess the whole dataset according to the law of multiplication to make computation faster.
@@ -396,7 +307,16 @@ package object predictions {
      * @return The initial dataset, with the updated ratings.
      */
     def preprocessData(data: Seq[Rating]): Seq[Rating] = {
-      data.map(x => preprocessRating(x, data))
+      val norm2RatingsByUser = ratingsByUser.mapValues(x => sqrt(x.map(y => pow(y.rating, 2)).sum))
+      data.map(x => {
+        val numerator = x.rating
+        val denominator = norm2RatingsByUser(x.user)
+        var fraction: Double = 0.0
+        if (denominator != 0) {
+          fraction = numerator / denominator
+        }
+        Rating(user = x.user, item = x.item, rating = fraction)
+      })
     }
 
     /**
@@ -412,6 +332,9 @@ package object predictions {
      * @return The cosine similarity.
      */
     def userCosineSimilarity(user1: Int, user2: Int): Double = {
+      if (user1 == user2) {
+        return 0
+      }
       val user1Ratings = preprocessedRatingsByUser.getOrElse(user1, Seq())
       val user2Ratings = preprocessedRatingsByUser.getOrElse(user2, Seq())
       // Combine user ratings, group them by item and only select groups that have exactly 2 members
@@ -430,6 +353,9 @@ package object predictions {
      * @return The Jaccard similarity
      */
     def userJaccardSimilarity(user1: Int, user2: Int): Double = {
+      if (user1 == user2) {
+        return 0
+      }
       val user1Ratings = preprocessedRatingsByUser.getOrElse(user1, Seq()).map(x => x.item).toSet
       val user2Ratings = preprocessedRatingsByUser.getOrElse(user2, Seq()).map(x => x.item).toSet
       val itemIntersection = user1Ratings.intersect(user2Ratings).size
@@ -450,9 +376,10 @@ package object predictions {
      */
     def getUserItemAvgDev(user: Int, item: Int, similarity: (Int, Int) => Double): Double = {
       // TODO: ask whether we should ignore the ratings given by our user
-      val relevantUserRatings = normalizedTrain.filter(x => x.item == item && x.user != user)
-      val numerator = relevantUserRatings.map(x => similarity(user, x.user) * x.rating).sum
-      val denominator = relevantUserRatings.map(x => abs(similarity(user, x.user))).sum
+      // TODO: precompute similarity
+      val relevantRatings = normalizedRatingsByItem(item)
+      val numerator = relevantRatings.map(x => similarity(user, x.user) * x.rating).sum
+      val denominator = relevantRatings.map(x => abs(similarity(user, x.user))).sum
       if (denominator != 0) {
         return numerator / denominator
       }
@@ -467,19 +394,25 @@ package object predictions {
      * @param similarity The function that will be used to measure similarity.
      * @return The predicted rating.
      */
-    def getPredUserItem(item: Int, user: Int, similarity: (Int, Int) => Double): Double = {
-      val userAvg = getUserAvg(train)(user, 0)
-      val userItemAvgDev = getUserItemAvgDev(user = user, item = item, similarity = similarity)
-      if (userItemAvgDev == 0 || !train.exists(x => x.item == item)) {
-        // No rating for i in the training set of the item average dev is 0
-        if (!train.exists(x => x.user == user)) {
-          // The user has no rating
-          return getGlobalAverage(train)(0, 0)
+    def personalizedPredictor(train: Seq[Rating], similarity: (Int, Int) => Double): (Int, Int) => Double = {
+      val avgRatingByUser = userAvg(train)
+      val avgGlobal = globalAverage(train)
+
+      def prediction(user: Int, item: Int): Double = {
+        val userItemAvgDev = getUserItemAvgDev(user = user, item = item, similarity = similarity)
+        if (!normalizedRatingsByItem.contains(item) || userItemAvgDev == 0) {
+          // No rating for i in the training set of the item average dev is 0
+          if (!avgRatingByUser.contains(user)) {
+            // The user has no rating
+            return avgGlobal
+          }
+          return avgRatingByUser(user)
         }
-        return userAvg
+        val userAvg = avgRatingByUser(user)
+        userAvg + userItemAvgDev * scaleUserRating(userAvg + userItemAvgDev, userAvg)
       }
 
-      userAvg + userItemAvgDev * scaleUserRating(userAvg + userItemAvgDev, userAvg)
+      prediction
     }
 
     /**
@@ -488,8 +421,9 @@ package object predictions {
      * @param similarity The similarity function that will be used to compare users.
      * @return Mean Average Error between the predictions and the test.
      */
-    def getMAE(similarity: (Int, Int) => Double): Double = {
-      test.map(x => abs(getPredUserItem(item = x.item, user = x.user, similarity) - x.rating)).sum / test.length
+    override def getMAE(similarity: (Int, Int) => Double): Double = {
+      val predictor = personalizedPredictor(train, similarity)
+      mean(test.map(x => (predictor(x.user, x.item) - x.rating).abs))
     }
   }
 
@@ -498,7 +432,7 @@ package object predictions {
    */
   class KNNSolver(train: Seq[Rating], test: Seq[Rating], k: Int) extends PersonalizedSolver(train, test) {
     // A list of unique users.
-    val uniqueUsers: Seq[Int] = normalizedTrain.map(x => x.user).distinct
+    val uniqueUsers: Seq[Int] = Seq[Int]() // 42 normalizedTrain.map(x => x.user).distinct
     // Store the similarities of the k-closest neighbours for each user.
     val KNearestUsers: Map[Int, Seq[Int]] = uniqueUsers.map(x => x -> getKNearestUsers(x)).toMap
 
@@ -506,7 +440,7 @@ package object predictions {
       // Compute similarities for current user with every other user
       val allUserSimilarities: Seq[(Int, Double)] = uniqueUsers
         .map(other => (other, userCosineSimilarity(user, other)))
-        .filter { case (other, _) => other != user }
+        .filterNot { case (other, _) => other == user }
 
       // Get the sorted array of similarities
       val sortedUserSimilarities = Sorting
@@ -539,13 +473,13 @@ package object predictions {
      * @return The rating.
      */
     override def getUserItemAvgDev(user: Int, item: Int, similarity: (Int, Int) => Double): Double = {
-      val relevantUserRatings = getKNearestUsers(user)
-        .flatMap(x => normalizedRatingsByUser(x).filter(y => y.item == item))
-      val numerator = relevantUserRatings.map(x => userSimilarity(user, x.user) * x.rating).sum
-      val denominator = relevantUserRatings.map(x => abs(userSimilarity(user, x.user))).sum
-      if (denominator != 0) {
-        return numerator / denominator
-      }
+      //      val relevantUserRatings = getKNearestUsers(user)
+      //        .flatMap(x => normalizedRatingsByUser(x).filter(y => y.item == item))
+      //      val numerator = relevantUserRatings.map(x => userSimilarity(user, x.user) * x.rating).sum
+      //      val denominator = relevantUserRatings.map(x => abs(userSimilarity(user, x.user))).sum
+      //      if (denominator != 0) {
+      //        return numerator / denominator
+      //      } 42
       0
     }
   }
