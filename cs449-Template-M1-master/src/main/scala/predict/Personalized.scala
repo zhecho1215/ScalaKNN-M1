@@ -35,7 +35,7 @@ object Personalized extends App {
   val test = load(spark, conf.test(), conf.separator()).collect()
 
   // Initialize the solver for questions related to the Personalized algorithm.
-  val solver = new PersonalizedSolver(train, test)
+  val solver = new PersonalizedSolver(test)
 
   // Save answers as JSON
   def printToFile(content: String,
@@ -48,7 +48,7 @@ object Personalized extends App {
           f.close
         }
     }
-  
+
   conf.json.toOption match {
     case None => ;
     case Some(jsonFile) => {
