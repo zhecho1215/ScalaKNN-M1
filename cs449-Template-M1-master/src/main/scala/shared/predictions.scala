@@ -296,8 +296,8 @@ package object predictions {
   class PersonalizedSolver(train: Seq[Rating], test: Seq[Rating]) extends BaselineSolver(test) {
     // Apply preprocessing operations on the train set to make the process faster
     val normalizedRatingsByItem: Map[Int, Seq[Rating]] = normalizeData(train).groupBy(x => x.item)
-    val preprocessedTrain: Seq[Rating] = preprocessData(normalizeData(train))
     val ratingsByUser: Map[Int, Seq[Rating]] = train.groupBy(x => x.user)
+    val preprocessedTrain: Seq[Rating] = preprocessData(normalizeData(train))
     val preprocessedRatingsByUser: Map[Int, Seq[Rating]] = preprocessedTrain.groupBy(x => x.user)
 
     /**
@@ -377,7 +377,7 @@ package object predictions {
     def getUserItemAvgDev(user: Int, item: Int, similarity: (Int, Int) => Double): Double = {
       // TODO: ask whether we should ignore the ratings given by our user
       // TODO: precompute similarity
-      val relevantRatings = normalizedRatingsByItem(item)
+      val relevantRatings = normalizedRatingsByItem.getOrElse(item, Seq[Rating]())
       val numerator = relevantRatings.map(x => similarity(user, x.user) * x.rating).sum
       val denominator = relevantRatings.map(x => abs(similarity(user, x.user))).sum
       if (denominator != 0) {
@@ -504,8 +504,9 @@ package object predictions {
       val notRatedMovies = allMovies.diff(ratedMovies)
 
       // Compute predicted score for movies that were not rated
-      val allPredictions: Array[(Int, Double)] = notRatedMovies
-        .map(x => (x, getPredUserItem(item = x, user = user, userCosineSimilarity))).toArray
+      val predictor = personalizedPredictor(train, userCosineSimilarity)(_, _)
+      val allPredictions: Seq[(Int, Double)] = notRatedMovies
+        .map(x => (x, predictor(user, x))).toSeq
 
       // Sort predictions
       scala.util.Sorting.stableSort(allPredictions,
