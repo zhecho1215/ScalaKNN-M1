@@ -418,6 +418,14 @@ package object predictions {
       userSimilarities
     }
 
+    /**
+     * Generated a predicted score for a given user and item.
+     *
+     * @param user         The user for which the prediction will be computed
+     * @param item         The item for which the prediction will be computed
+     * @param similarities The pre-computed similarities between all users
+     * @return A predicted rating
+     */
     def prediction(user: Int, item: Int, similarities: mutable.Map[Int, mutable.Map[Int, Double]]): Double = {
       val userItemAvgDev = getUserItemAvgDev(user = user, item = item, similarities)
       if (!normalizedRatingsByItem.contains(item) || userItemAvgDev == 0) {
