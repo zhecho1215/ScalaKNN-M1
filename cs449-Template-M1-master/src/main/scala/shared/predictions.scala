@@ -418,30 +418,42 @@ package object predictions {
       userSimilarities
     }
 
+    def prediction(user: Int, item: Int, similarities: mutable.Map[Int, mutable.Map[Int, Double]]): Double = {
+      val userItemAvgDev = getUserItemAvgDev(user = user, item = item, similarities)
+      if (!normalizedRatingsByItem.contains(item) || userItemAvgDev == 0) {
+        // No rating for i in the training set of the item average dev is 0
+        if (!avgRatingByUser.contains(user)) {
+          // The user has no rating
+          return avgGlobal
+        }
+        return avgRatingByUser(user)
+      }
+      val userAvg = avgRatingByUser(user)
+      userAvg + userItemAvgDev * scaleUserRating(userAvg + userItemAvgDev, userAvg)
+    }
+
+
     /**
      * Generates a function that can compute a prediction for an item for an user based on train data.
+     *
+     * @param similarities A list of precomputed similarities
+     * @return The predicted rating
+     */
+    def personalizedPredictor(similarities: mutable.Map[Int, mutable.Map[Int, Double]]): (Int, Int) => Double = {
+      prediction(_, _, similarities)
+    }
+
+    /**
+     * Generates a function that can compute a prediction for an item for an user based on train data.
+     * Computes all similarities between users as a first step.
      *
      * @param similarityFunc The function that will be used to measure similarity between 2 users
      * @return The predicted rating
      */
     def personalizedPredictor(similarityFunc: (Int, Int) => Double): (Int, Int) => Double = {
+      // Compute similarities
       val userSimilarities = computeAllSimilarities(similarityFunc)
-
-      def prediction(user: Int, item: Int): Double = {
-        val userItemAvgDev = getUserItemAvgDev(user = user, item = item, userSimilarities)
-        if (!normalizedRatingsByItem.contains(item) || userItemAvgDev == 0) {
-          // No rating for i in the training set of the item average dev is 0
-          if (!avgRatingByUser.contains(user)) {
-            // The user has no rating
-            return avgGlobal
-          }
-          return avgRatingByUser(user)
-        }
-        val userAvg = avgRatingByUser(user)
-        userAvg + userItemAvgDev * scaleUserRating(userAvg + userItemAvgDev, userAvg)
-      }
-
-      prediction
+      prediction(_, _, userSimilarities)
     }
 
     /**
@@ -516,6 +528,7 @@ package object predictions {
       val denominator = relevantUserRatings.map(x => abs(userSimilarities(user)(x.user))).sum
       if (denominator != 0) {
         return numerator / denominator
+
       }
       0
     }
@@ -536,28 +549,21 @@ package object predictions {
      */
     def getRecommendations(user: Int, top: Int): List[(Int, Double)] = {
       // Get movies that were not rated by user
-      println("Movies not rated....")
       val allMovies = movieNames.keys.toSet
       val ratedMovies = preprocessedRatingsByUser(user).map(x => x.item).toSet
       val notRatedMovies = allMovies.diff(ratedMovies)
 
       // Compute predicted score for movies that were not rated
-      println("Computing predictions....")
-      val predictor = personalizedPredictor(userCosineSimilarity)(_, _)
+      val predictor = personalizedPredictor(userSimilarities)(_, _)
       val allPredictions: Seq[(Int, Double)] = notRatedMovies
-        .map(x => {
-          println(x.toString)
-          (x, predictor(user, x))
-        }).toSeq
+        .map(x => (x, predictor(user, x))).toSeq
 
-      println("Sorting....")
       // Sort predictions
-      scala.util.Sorting.stableSort(allPredictions,
+      val sortedPredictions = scala.util.Sorting.stableSort(allPredictions,
         (e1: (Int, Double), e2: (Int, Double)) => e1._2 > e2._2 || e1._2 == e2._2 && e1._1 < e2._1)
 
-      println("Sorted")
       // Return the top predictions
-      allPredictions.take(top).toList
+      sortedPredictions.take(top).toList
     }
   }
 }
