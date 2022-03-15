@@ -76,7 +76,7 @@ object Baseline extends App {
         ),
         "B.1" -> ujson.Obj(
           // Datatype of answer: Double
-          "1.GlobalAvg" -> ujson.Num(solver.globalAverage(train)),
+          "1.GlobalAvg" -> ujson.Num(solver.globalAvg(train)),
           // Datatype of answer: Double
           "2.User1Avg" -> ujson.Num(solver.userAvgPredictor(train)(1, 0)),
           // Datatype of answer: Double

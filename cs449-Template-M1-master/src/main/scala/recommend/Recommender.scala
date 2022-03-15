@@ -48,9 +48,8 @@ object Recommender extends App {
     else (cols(0).toInt, cols(1).toString)
   }).collect().toMap
 
-  // Initialize the solver for questions related to the Recommender section
-  val train = data ++ personal
-  val solver = new RecommenderSolver(train, movieNames, k = 300)
+  // Initialize the solver for questions related to the Recommender algorithm.
+  val solver = new RecommenderSolver(data ++ personal, movieNames, k = 300)
 
   // Save answers as JSON
   def printToFile(content: String,
@@ -74,12 +73,11 @@ object Recommender extends App {
         ),
         "R.1" -> ujson.Obj(
           // Prediction for user 1 of item 1
-          "PredUser1Item1" -> ujson.Num(solver.personalizedPredictor(train, solver.userCosineSimilarity)(1, 1))
+          "PredUser1Item1" -> ujson.Num(solver.personalizedPredictor(solver.userCosineSimilarity)(1, 1))
+          // IMPORTANT: To break ties and ensure reproducibility of results,
+          // please report the top-3 recommendations that have the smallest
+          // movie identifier.
         ),
-        // IMPORTANT: To break ties and ensure reproducibility of results,
-        // please report the top-3 recommendations that have the smallest
-        // movie identifier.
-
         "R.2" -> solver.getRecommendations(user = 944, top = 3).map(x => ujson.Arr(x._1, movieNames(x._1), x._2))
       )
       val json = write(answers, 4)

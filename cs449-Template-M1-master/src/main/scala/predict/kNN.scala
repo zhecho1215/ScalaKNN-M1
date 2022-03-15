@@ -34,14 +34,14 @@ object kNN extends App {
   println("Loading test data from: " + conf.test())
   val test = load(spark, conf.test(), conf.separator()).collect()
 
-  // Initialize the solver for questions related to the KNN algorithm with k = 10
-  val solver10 = new KNNSolver(train, test, 10)
-  // Initialize the solver for questions related to the KNN algorithm with k = 300
-  val solver300 = new KNNSolver(train, test, 300)
+  // Initialize the solver for questions related to the KNN algorithm.
+  val solver = new KNNSolver(train, test, k = 10)
 
   val measurements = (1 to conf.num_measurements()).map(x => timingInMs(() => {
-    // solver300.getMAE(similarity = solver300.userCosineSimilarity)
-    42
+    {
+      val solver = new KNNSolver(train, test, k = 300)
+      solver.getMAE(solver.userCosineSimilarity)
+    }
   }))
   val timings = measurements.map(t => t._2) // Retrieve the timing measurements
 
@@ -56,7 +56,7 @@ object kNN extends App {
           f.close
         }
     }
-  // TODO: Add get MAE.
+
   conf.json.toOption match {
     case None => ;
     case Some(jsonFile) => {
@@ -68,24 +68,24 @@ object kNN extends App {
         ),
         "N.1" -> ujson.Obj(
           // Similarity between user 1 and user 1 (k=10)
-          "1.k10u1v1" -> ujson.Num(solver10.userSimilarity(1, 1)),
+          "1.k10u1v1" -> ujson.Num(solver.kNearestSimilarity(1, 1)),
           // Similarity between user 1 and user 864 (k=10)
-          "2.k10u1v864" -> ujson.Num(solver10.userSimilarity(1, 864)),
+          "2.k10u1v864" -> ujson.Num(solver.kNearestSimilarity(1, 864)),
           // Similarity between user 1 and user 886 (k=10)
-          "3.k10u1v886" -> ujson.Num(solver10.userSimilarity(1, 886)),
+          "3.k10u1v886" -> ujson.Num(solver.kNearestSimilarity(1, 886)),
           // Prediction of item 1 for user 1 (k=10)
-          // TODO: change
-          "4.PredUser1Item1" -> ujson.Num(solver10.personalizedPredictor(train, solver10.userCosineSimilarity)(1, 1))
+          "4.PredUser1Item1" -> ujson.Num(solver.personalizedPredictor(solver.userCosineSimilarity)(1, 1))
         ),
         "N.2" -> ujson.Obj(
-          // TODO: add the rest of the k values.
-          "1.kNN-Mae" -> List(10).map(k => {
-            val solver = new KNNSolver(train, test, k)
+          "1.kNN-Mae" -> List(10, 30, 50, 100, 200, 300, 400, 800, 943).map(k =>
             List(
               k,
-              solver.getMAE(similarity = solver.userCosineSimilarity)
+              {
+                // Initialize new solver each time
+                val solver = new KNNSolver(train, test, k)
+                solver.getMAE(solver.userCosineSimilarity)
+              }
             )
-          }
           ).toList
         ),
         "N.3" -> ujson.Obj(
