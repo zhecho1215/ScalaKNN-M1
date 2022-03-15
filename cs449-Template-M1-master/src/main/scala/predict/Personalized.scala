@@ -60,25 +60,25 @@ object Personalized extends App {
         ),
         "P.1" -> ujson.Obj(
           // Prediction of item 1 for user 1 (similarity 1 between users)
-          "1.PredUser1Item1" -> ujson.Num(solver.personalizedPredictor(train, solver.userUniformSimilarity)(1, 1)),
+          "1.PredUser1Item1" -> ujson.Num(solver.personalizedPredictor(solver.userUniformSimilarity)(1, 1)),
           // MAE when using similarities of 1 between all users
-          "2.OnesMAE" -> ujson.Num(solver.getMAE(similarity = solver.userUniformSimilarity))
+          "2.OnesMAE" -> ujson.Num(solver.getMAE(similarityFunc = solver.userUniformSimilarity))
         ),
         "P.2" -> ujson.Obj(
           // Similarity between user 1 and user 2 (adjusted Cosine)
           "1.AdjustedCosineUser1User2" -> ujson.Num(solver.userCosineSimilarity(1, 2)),
           // Prediction item 1 for user 1 (adjusted cosine)
-          "2.PredUser1Item1" -> ujson.Num(solver.personalizedPredictor(train, solver.userCosineSimilarity)(1, 1)),
+          "2.PredUser1Item1" -> ujson.Num(solver.personalizedPredictor(solver.userCosineSimilarity)(1, 1)),
           // MAE when using adjusted cosine similarity
-          "3.AdjustedCosineMAE" -> ujson.Num(solver.getMAE(similarity = solver.userCosineSimilarity))
+          "3.AdjustedCosineMAE" -> ujson.Num(solver.getMAE(similarityFunc = solver.userCosineSimilarity))
         ),
         "P.3" -> ujson.Obj(
           // Similarity between user 1 and user 2 (jaccard similarity)
           "1.JaccardUser1User2" -> ujson.Num(solver.userJaccardSimilarity(1, 2)),
           // Prediction item 1 for user 1 (jaccard)
-          "2.PredUser1Item1" -> ujson.Num(solver.personalizedPredictor(train, solver.userJaccardSimilarity)(1, 1)),
+          "2.PredUser1Item1" -> ujson.Num(solver.personalizedPredictor(solver.userJaccardSimilarity)(1, 1)),
           // MAE when using jaccard similarity
-          "3.JaccardPersonalizedMAE" -> ujson.Num(solver.getMAE(similarity = solver.userJaccardSimilarity))
+          "3.JaccardPersonalizedMAE" -> ujson.Num(solver.getMAE(similarityFunc = solver.userJaccardSimilarity))
         )
       )
       val json = write(answers, 4)
