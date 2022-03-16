@@ -6,6 +6,7 @@ libraryDependencies += "org.apache.spark" %% "spark-core" % "2.4.7"
 libraryDependencies += "org.apache.spark" %% "spark-sql" % "2.4.7"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.0" % Test
 libraryDependencies += "com.lihaoyi" %% "ujson" % "1.5.0"
+libraryDependencies += "org.apache.spark" %% "spark-mllib" % "2.3.0"
 
 scalaVersion in ThisBuild := "2.11.12"
 enablePlugins(JavaAppPackaging)

@@ -42,7 +42,7 @@ object DistributedBaseline extends App {
 
   val measurements = (1 to conf.num_measurements()).map(x => timingInMs(() => {
     val solver = new DistributedSolvers(test)
-    solver.getMAE(solver.baselinePredictor(train))
+    solver.getMAE(train, solver.baselinePredictor(train))
   }))
   val timings = measurements.map(t => t._2) // Retrieve the timing measurements
 
@@ -72,15 +72,15 @@ object DistributedBaseline extends App {
           // Datatype of answer: Double
           "1.GlobalAvg" -> ujson.Num(solver.globalAvg(train)),
           // Datatype of answer: Double
-          "2.User1Avg" -> ujson.Num(solver.userAvgPredictor(train)(1, 0)),
+          "2.User1Avg" -> ujson.Num(solver.getUserAvg(train)(1, 0)),
           // Datatype of answer: Double
-          "3.Item1Avg" -> ujson.Num(solver.itemAvgPredictor(train)(0, 1)),
+          "3.Item1Avg" -> ujson.Num(solver.getItemAvg(train)(0, 1)),
           // Datatype of answer: Double,
-          "4.Item1AvgDev" -> ujson.Num(solver.itemAvgDev(train, 1)),
+          "4.Item1AvgDev" -> ujson.Num(solver.getItemAvgDev(train, 1)),
           // Datatype of answer: Double
           "5.PredUser1Item1" -> ujson.Num(solver.baselinePredictor(train)(1, 1)),
-          // Datatype of answer: Double
-          "6.Mae" -> ujson.Num(solver.getMAE(solver.baselinePredictor(train)))
+           //Datatype of answer: Double
+          "6.Mae" -> ujson.Num(solver.getMAE(train, solver.baselinePredictor(train)))
         ),
         "D.2" -> ujson.Obj(
           "1.DistributedBaseline" -> ujson.Obj(
