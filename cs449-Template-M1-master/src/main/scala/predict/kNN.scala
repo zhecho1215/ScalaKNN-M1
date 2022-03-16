@@ -103,6 +103,7 @@ object kNN extends App {
       printToFile(json, jsonFile)
     }
   }
+  // TODO: fix code
 
   println("")
   spark.close()
