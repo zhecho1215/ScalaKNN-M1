@@ -194,13 +194,13 @@ package object predictions {
     val userAvg: RDD[Rating] => Map[Int, Double] =
       (train: RDD[Rating]) => train.map(x => (x.user, (x.rating, 1)))
                                    .reduceByKey((x, y) => (x._1 + y._1, x._2 + y._2))
-                                   .map(x => x._1 -> x._2._1 / x._2._2).collect().toMap
+                                   .map(x => x._1 -> x._2._1 / x._2._2).collectAsMap.toMap
 
     // A function that returns the average rating by item given a train set
     val itemAvg: RDD[Rating] => Map[Int, Double] =
       (train: RDD[Rating]) => train.map(x => (x.item, (x.rating, 1)))
                                    .reduceByKey((x, y) => (x._1 + y._1, x._2 + y._2))
-                                   .map(x => x._1 -> x._2._1 / x._2._2).collect().toMap
+                                   .map(x => x._1 -> x._2._1 / x._2._2).collectAsMap.toMap
 
     /**
      * Function that normalizes the ratings of a dataset.
@@ -295,13 +295,9 @@ package object predictions {
      * @return A prediction for an item and a user based on train data
      */
     def baselinePredictor(train: RDD[Rating]): (Int, Int) => Double = {
-      println("B")
       val avgRatingByUser = userAvg(train)
-      println("a")
       val avgRatingDevByItem = itemAvg(normalizeData(train, avgRatingByUser))
-      println("C")
       val avgGlobal = globalAvg(train)
-      println("d")
 
       def prediction(user: Int, item: Int): Double = {
 
