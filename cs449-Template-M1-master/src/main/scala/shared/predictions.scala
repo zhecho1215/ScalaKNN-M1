@@ -194,13 +194,20 @@ package object predictions {
     val userAvg: RDD[Rating] => Map[Int, Double] =
       (train: RDD[Rating]) => train.map(x => (x.user, (x.rating, 1)))
                                    .reduceByKey((x, y) => (x._1 + y._1, x._2 + y._2))
-                                   .map(x => x._1 -> x._2._1 / x._2._2).collectAsMap.toMap
+                                   .map(x => x._1 -> x._2._1 / x._2._2).collect().toMap
 
     // A function that returns the average rating by item given a train set
     val itemAvg: RDD[Rating] => Map[Int, Double] =
       (train: RDD[Rating]) => train.map(x => (x.item, (x.rating, 1)))
                                    .reduceByKey((x, y) => (x._1 + y._1, x._2 + y._2))
-                                   .map(x => x._1 -> x._2._1 / x._2._2).collectAsMap.toMap
+                                   .map(x => x._1 -> x._2._1 / x._2._2).collect().toMap
+
+    def getGlobalAvg (train: RDD[Rating]): (Int, Int) => Double = {
+      (user: Int, item: Int) => {
+        train.map(x => x.rating).mean()
+      }
+    }
+
 
     /**
      * Function that normalizes the ratings of a dataset.
@@ -210,18 +217,16 @@ package object predictions {
      * @return The normalized dataset
      */
     def normalizeData(train: RDD[Rating], avgRatingByUser: Map[Int, Double]): RDD[Rating] = {
+
       // Normalize each rating
       train.map(x => Rating(x.user, x.item,
-        (x.rating - avgRatingByUser(x.user)) / {
-          if (x.rating > avgRatingByUser(x.user)) 5 - avgRatingByUser(x.user)
-          else if (x.rating < avgRatingByUser(x.user)) avgRatingByUser(x.user) - 1
-          else 1
-        }))
+        (x.rating - avgRatingByUser(x.user)) / scaleUserRating(x.rating, avgRatingByUser(x.user))))
     }
-
     /**
      * Scales the user rating as defined by Equation 2
      *
+     * @param currRating The rating for item i, given by user u
+     * @param avgRating  The average rating, given by user u
      * @return A scaled rating
      */
     val scaleUserRating: (Double, Double) => Double = (currRating: Double, avgRating: Double) => {
@@ -247,9 +252,10 @@ package object predictions {
      * @param train Training data
      * @return The average score per user
      */
-    def userAvgPredictor(train: RDD[Rating]): (Int, Int) => Double = {
-      val avgRatingByUser = userAvg(train)
-      (user: Int, item: Int) => avgRatingByUser(user)
+    def getUserAvg (train: RDD[Rating]): (Int, Int) => Double = {
+      (user: Int, item: Int)=> {
+        train.filter(x => x.user == user).map(x => x.rating).mean()
+      }
     }
 
     /**
@@ -258,20 +264,10 @@ package object predictions {
      * @param train Training data
      * @return The average score per item
      */
-    def itemAvgPredictor(train: RDD[Rating]): (Int, Int) => Double = {
-      val avgRatingByItem = itemAvg(train)
-      val avgRatingByUser = userAvg(train)
-      val avgGlobal = globalAvg(train)
+    def getItemAvg (train: RDD[Rating]): (Int, Int) => Double = {
       (user: Int, item: Int) => {
-        if (!avgRatingByItem.contains(item)) {
-          if (!avgRatingByUser.contains(user)) {
-            avgGlobal
-          }
-          else {
-            avgRatingByUser(user)
-          }
-        }
-        else avgRatingByItem(item)
+        if (train.filter(x => x.item == item).count() == 0) getGlobalAvg(train)(0,0)
+        else train.filter(x => x.item == item).map(x => x.rating).mean()
       }
     }
 
@@ -281,9 +277,8 @@ package object predictions {
      * @param train Training data
      * @return The average deviation of an item
      */
-    def itemAvgDev(train: RDD[Rating], item: Int): Double = {
-      val avgRatingDevByItem = itemAvg(normalizeData(train, userAvg(train)))
-      avgRatingDevByItem(item)
+    def getItemAvgDev(train: RDD[Rating], item: Int): Double = {
+      getItemAvg(normalizeData(train, userAvg(train)))(0, item)
     }
 
     /**
@@ -293,22 +288,26 @@ package object predictions {
      * @return A prediction for an item and a user based on train data
      */
     def baselinePredictor(train: RDD[Rating]): (Int, Int) => Double = {
-      val avgRatingByUser = userAvg(train)
-      val avgRatingDevByItem = itemAvg(normalizeData(train, avgRatingByUser))
-      val avgGlobal = globalAvg(train)
+      //      println("B")
+      //      val avgRatingByUser = userAvg(train)
+      //      println("a")
+      //      val avgRatingDevByItem = itemAvg(normalizeData(train, avgRatingByUser))
+      //      println("C")
+      //      val avgGlobal = globalAvg(train)
+      //      println("d")
 
       def prediction(user: Int, item: Int): Double = {
 
-        if (!avgRatingDevByItem.contains(item) || avgRatingDevByItem(item) == 0) {
+        val userAvg = getUserAvg(train)(user,0)
+        val itemAvgDev = getItemAvgDev(train,item)
+        if (itemAvgDev == 0) {
           // No rating for i in the training set of the item average dev is 0
-          if (!avgRatingByUser.contains(user)) {
+          if (train.filter(x => x.user == user).count() == 0) {
             // The user has no rating
-            return avgGlobal
+            return globalAvg(train)
           }
-          return avgRatingByUser(user)
+          return getUserAvg(train)(user,0)
         }
-        val userAvg = avgRatingByUser(user)
-        val itemAvgDev = avgRatingDevByItem(item)
         userAvg + itemAvgDev * scaleUserRating(userAvg + itemAvgDev, userAvg)
       }
 
@@ -321,10 +320,13 @@ package object predictions {
      * @param predictorFunc Estimates the prediction for given item and user
      * @return Mean Average Error between the predictions and the test
      */
-    def getMAE(predictorFunc: (Int, Int) => Double): Double = {
-      test.map(x => (predictorFunc(x.user, x.item) - x.rating).abs).mean
+    def getMAE(train: RDD[Rating], predictorFunc: (Int, Int) => Double): Double = {
+      val prediction = test.collect().map(x => predictorFunc(x.user, x.item))
+      mean((prediction zip test.collect()).map(x => (x._1-x._2.rating).abs))
     }
   }
+
+
 
 
   /**
