@@ -1,26 +1,23 @@
 package distributed
 
-import org.rogach.scallop._
-import org.apache.spark.rdd.RDD
-import ujson._
+import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
-import org.apache.log4j.Logger
-import org.apache.log4j.Level
-import scala.math
+import org.rogach.scallop._
 import shared.predictions._
+import ujson._
 
 class Conf(arguments: Seq[String]) extends ScallopConf(arguments) {
   val train = opt[String](required = true)
   val test = opt[String](required = true)
-  val separator = opt[String](default=Some("\t"))
-  val master = opt[String](default=Some(""))
-  val num_measurements = opt[Int](default=Some(0))
+  val separator = opt[String](default = Some("\t"))
+  val master = opt[String](default = Some(""))
+  val num_measurements = opt[Int](default = Some(0))
   val json = opt[String]()
   verify()
 }
 
 object DistributedBaseline extends App {
-  var conf = new Conf(args) 
+  var conf = new Conf(args)
 
   // Remove these lines if encountering/debugging Spark
   Logger.getLogger("org").setLevel(Level.OFF)
@@ -30,33 +27,39 @@ object DistributedBaseline extends App {
   } else {
     SparkSession.builder().getOrCreate()
   }
-  spark.sparkContext.setLogLevel("ERROR") 
+  spark.sparkContext.setLogLevel("ERROR")
 
   println("")
   println("******************************************************")
 
-  println("Loading training data from: " + conf.train()) 
+  println("Loading training data from: " + conf.train())
   val train = load(spark, conf.train(), conf.separator())
-  println("Loading test data from: " + conf.test()) 
+  println("Loading test data from: " + conf.test())
   val test = load(spark, conf.test(), conf.separator())
 
+  // Initialize the solvers for questions in D
+  val solver = new DistributedSolvers(test)
+
   val measurements = (1 to conf.num_measurements()).map(x => timingInMs(() => {
-    Thread.sleep(1000) // Do everything here from train and test
-    42        // Output answer as last value
+    val solver = new DistributedSolvers(test)
+    solver.getMAE(solver.baselinePredictor(train))
   }))
   val timings = measurements.map(t => t._2) // Retrieve the timing measurements
 
-  val solvers = new DistributedSolvers(train, test)
   // Save answers as JSON
-  def printToFile(content: String, 
+  def printToFile(content: String,
                   location: String = "./answers.json") =
-    Some(new java.io.PrintWriter(location)).foreach{
-      f => try{
-        f.write(content)
-      } finally{ f.close }
-  }
+    Some(new java.io.PrintWriter(location)).foreach {
+      f =>
+        try {
+          f.write(content)
+        } finally {
+          f.close
+        }
+    }
+
   conf.json.toOption match {
-    case None => ; 
+    case None => ;
     case Some(jsonFile) => {
       val answers = ujson.Obj(
         "Meta" -> ujson.Obj(
@@ -66,18 +69,24 @@ object DistributedBaseline extends App {
           "4.Measurements" -> conf.num_measurements()
         ),
         "D.1" -> ujson.Obj(
-          "1.GlobalAvg" -> solvers.getGlobalAvg(train)(0,0), // Datatype of answer: Double
-          "2.User1Avg" -> solvers.getUserAvg(train)(1,0), // Datatype of answer: Double
-          "3.Item1Avg" -> solvers.getItemAvg(train)(0,1), // Datatype of answer: Double
-          "4.Item1AvgDev" -> solvers.getItemAvgDev(train,1), // Datatype of answer: Double
-          "5.PredUser1Item1" -> solvers.getBaseline(train)(1, 1)
-//          "6.Mae" ->solvers.getPredictorMAE(solvers.getBaseline)  // Datatype of answer: Double// Datatype of answer: Double
+          // Datatype of answer: Double
+          "1.GlobalAvg" -> ujson.Num(solver.globalAvg(train)),
+          // Datatype of answer: Double
+          "2.User1Avg" -> ujson.Num(solver.userAvgPredictor(train)(1, 0)),
+          // Datatype of answer: Double
+          "3.Item1Avg" -> ujson.Num(solver.itemAvgPredictor(train)(0, 1)),
+          // Datatype of answer: Double,
+          "4.Item1AvgDev" -> ujson.Num(solver.itemAvgDev(train, 1)),
+          // Datatype of answer: Double
+          "5.PredUser1Item1" -> ujson.Num(solver.baselinePredictor(train)(1, 1)),
+          // Datatype of answer: Double
+          "6.Mae" -> ujson.Num(solver.getMAE(solver.baselinePredictor(train)))
         ),
         "D.2" -> ujson.Obj(
           "1.DistributedBaseline" -> ujson.Obj(
             "average (ms)" -> ujson.Num(mean(timings)), // Datatype of answer: Double
             "stddev (ms)" -> ujson.Num(std(timings)) // Datatype of answer: Double
-          )            
+          )
         )
       )
       val json = write(answers, 4)
