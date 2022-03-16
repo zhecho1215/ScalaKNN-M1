@@ -222,8 +222,6 @@ package object predictions {
     /**
      * Scales the user rating as defined by Equation 2
      *
-     * @param currRating The rating for item i, given by user u
-     * @param avgRating  The average rating, given by user u
      * @return A scaled rating
      */
     val scaleUserRating: (Double, Double) => Double = (currRating: Double, avgRating: Double) => {
@@ -390,10 +388,13 @@ package object predictions {
       val user1Ratings = preprocessedRatingsByUser.getOrElse(user1, Seq())
       val user2Ratings = preprocessedRatingsByUser.getOrElse(user2, Seq())
       // Combine user ratings, group them by item and only select groups that have exactly 2 members
-      val intersection = (user1Ratings ++ user2Ratings).groupBy(x => x.item)
-                                                       .filter { case (_, v) => v.length == 2 }
-                                                       .map { case (_, v) => v }
-      intersection.map(x => x.head.rating * x(1).rating).sum
+      var similarity = 0.0
+      for (a <- user1Ratings; b <- user2Ratings) {
+        if (a.item == b.item) {
+          similarity += a.rating * b.rating
+        }
+      }
+      similarity
     }
 
     /**
