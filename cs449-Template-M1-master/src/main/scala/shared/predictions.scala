@@ -23,6 +23,13 @@ package object predictions {
 
   def mean(s: Seq[Double]): Double = if (s.size > 0) s.reduce(_ + _) / s.length else 0.0
 
+  def mean(s: RDD[Double]): Double = {
+    val t = s.map(rating => (rating, 1.0)).reduce({
+      case ((acc, acc_c), (rating, rating_c)) => (acc + rating, acc_c + rating_c)
+    })
+    t._1 / t._2
+  }
+
   def load(spark: org.apache.spark.sql.SparkSession, path: String, sep: String): org.apache.spark.rdd.RDD[Rating] = {
     val file = spark.sparkContext.textFile(path)
     return file
@@ -314,6 +321,27 @@ package object predictions {
       prediction
     }
 
+    def baselineRDDPredictor(itemAverageDev : Map[Int, Double],
+                             userAverage: Map[Int, Double],
+                             globalAverage: Double):
+      (Int, Int) => Double = {
+      def prediction(user: Int, item: Int): Double = {
+        if (!(itemAverageDev contains item) || itemAverageDev(item) == 0) {
+          // No rating for i in the training set of the item average dev is 0
+          if (!(userAverage contains user)) {
+            // The user has no rating
+            return globalAverage
+          }
+          return userAverage(user)
+        }
+        val userAvg = userAverage(user)
+        val itemAvgDev = itemAverageDev(item)
+        userAvg + itemAvgDev * scaleUserRating(userAvg + itemAvgDev, userAvg)
+      }
+
+      prediction
+    }
+
     /**
      * Extracts predictions based on the given predictor function and returns MAE
      *
@@ -321,8 +349,11 @@ package object predictions {
      * @return Mean Average Error between the predictions and the test
      */
     def getMAE(train: RDD[Rating], predictorFunc: (Int, Int) => Double): Double = {
-      val prediction = test.collect().map(x => predictorFunc(x.user, x.item))
-      mean((prediction zip test.collect()).map(x => (x._1-x._2.rating).abs))
+      val itemDevAverage = itemAvg(normalizeData(train, userAvg(train)))
+      val userAverage = userAvg(test)
+      val globalAverage = globalAvg(train)
+
+      test.map(x => (baselineRDDPredictor(itemDevAverage, userAverage, globalAverage)(x.user, x.item) - x.rating).abs).mean
     }
   }
 

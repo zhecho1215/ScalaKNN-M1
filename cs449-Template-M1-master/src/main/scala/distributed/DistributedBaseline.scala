@@ -70,15 +70,15 @@ object DistributedBaseline extends App {
         ),
         "D.1" -> ujson.Obj(
           // Datatype of answer: Double
-          "1.GlobalAvg" -> ujson.Num(solver.globalAvg(train)),
-          // Datatype of answer: Double
-          "2.User1Avg" -> ujson.Num(solver.getUserAvg(train)(1, 0)),
-          // Datatype of answer: Double
-          "3.Item1Avg" -> ujson.Num(solver.getItemAvg(train)(0, 1)),
-          // Datatype of answer: Double,
-          "4.Item1AvgDev" -> ujson.Num(solver.getItemAvgDev(train, 1)),
-          // Datatype of answer: Double
-          "5.PredUser1Item1" -> ujson.Num(solver.baselinePredictor(train)(1, 1)),
+//          "1.GlobalAvg" -> ujson.Num(solver.globalAvg(train)),
+//          // Datatype of answer: Double
+//          "2.User1Avg" -> ujson.Num(solver.getUserAvg(train)(1, 0)),
+//          // Datatype of answer: Double
+//          "3.Item1Avg" -> ujson.Num(solver.getItemAvg(train)(0, 1)),
+//          // Datatype of answer: Double,
+//          "4.Item1AvgDev" -> ujson.Num(solver.getItemAvgDev(train, 1)),
+//          // Datatype of answer: Double
+//          "5.PredUser1Item1" -> ujson.Num(solver.baselinePredictor(train)(1, 1)),
            //Datatype of answer: Double
           "6.Mae" -> ujson.Num(solver.getMAE(train, solver.baselinePredictor(train)))
         ),
