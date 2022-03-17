@@ -326,12 +326,12 @@ package object predictions {
                              globalAverage: Double):
       (Int, Int) => Double = {
       def prediction(user: Int, item: Int): Double = {
+        if (!(userAverage contains user)) {
+          // The user has no rating
+          return globalAverage
+        }
         if (!(itemAverageDev contains item) || itemAverageDev(item) == 0) {
           // No rating for i in the training set of the item average dev is 0
-          if (!(userAverage contains user)) {
-            // The user has no rating
-            return globalAverage
-          }
           return userAverage(user)
         }
         val userAvg = userAverage(user)
@@ -352,7 +352,8 @@ package object predictions {
       val itemDevAverage = itemAvg(normalizeData(train, userAvg(train)))
       val userAverage = userAvg(test)
       val globalAverage = globalAvg(train)
-
+      print(test.count())
+      print(test.first())
       test.map(x => (baselineRDDPredictor(itemDevAverage, userAverage, globalAverage)(x.user, x.item) - x.rating).abs).mean
     }
   }
