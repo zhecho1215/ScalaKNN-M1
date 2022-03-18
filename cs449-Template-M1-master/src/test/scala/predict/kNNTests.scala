@@ -23,6 +23,7 @@ class kNNTests extends AnyFunSuite with BeforeAndAfterAll {
    var test2 : Array[shared.predictions.Rating] = null
 
    var adjustedCosine : Map[Int, Map[Int, Double]] = null
+   var solver : KNNSolver  = null
 
    override def beforeAll {
        Logger.getLogger("org").setLevel(Level.OFF)
@@ -36,6 +37,7 @@ class kNNTests extends AnyFunSuite with BeforeAndAfterAll {
        // to not depend on Spark
        train2 = load(spark, train2Path, separator).collect()
        test2 = load(spark, test2Path, separator).collect()
+
    }
 
    // All the functions definitions for the tests below (and the tests in other suites) 
@@ -48,27 +50,27 @@ class kNNTests extends AnyFunSuite with BeforeAndAfterAll {
    // decimal after the (floating) point, on data/ml-100k/u2.base (as loaded above).
    test("kNN predictor with k=10") { 
      // Create predictor on train2
-
+     solver = new KNNSolver(train2, test2, k = 10)
      // Similarity between user 1 and itself
-     assert(within(1.0, 0.0, 0.0001))
- 
+     assert(within(solver.kNearestSimilarity(1, 1), 0.0, 0.0001))
      // Similarity between user 1 and 864
-     assert(within(1.0, 0.0, 0.0001))
-
+     assert(within(solver.kNearestSimilarity(1, 864), 0.24232304952129619, 0.0001))
      // Similarity between user 1 and 886
-     assert(within(1.0, 0.0, 0.0001))
+     assert(within(solver.kNearestSimilarity(1, 886), 0.0, 0.0001))
 
      // Prediction user 1 and item 1
-     assert(within(1.0, 0.0, 0.0001))
+     assert(within(solver.personalizedPredictor(similarityFunc = solver.userCosineSimilarity)(1, 1), 4.319093503763853, 0.0001))
 
      // MAE on test2 
-     assert(within(1.0, 0.0, 0.0001))
+     assert(within(solver.getMAE(solver.userCosineSimilarity), 0.8287277961963556, 0.0001))
    } 
 
    test("kNN Mae") {
      // Compute MAE for k around the baseline MAE
-     
+
+     val solver10 = new KNNSolver(train2, test2, k = 10)
+     val solver100 = new KNNSolver(train2, test2, k = 100)
      // Ensure the MAEs are indeed lower/higher than baseline
-     assert(1.0 < 0.0)
+     assert(solver100.getMAE(solver100.userCosineSimilarity) < solver10.getMAE(solver10.userCosineSimilarity))
    }
 }

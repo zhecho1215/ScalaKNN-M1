@@ -214,8 +214,6 @@ package object predictions {
         train.map(x => x.rating).mean()
       }
     }
-
-
     /**
      * Function that normalizes the ratings of a dataset.
      *
@@ -295,14 +293,6 @@ package object predictions {
      * @return A prediction for an item and a user based on train data
      */
     def baselinePredictor(train: RDD[Rating]): (Int, Int) => Double = {
-      //      println("B")
-      //      val avgRatingByUser = userAvg(train)
-      //      println("a")
-      //      val avgRatingDevByItem = itemAvg(normalizeData(train, avgRatingByUser))
-      //      println("C")
-      //      val avgGlobal = globalAvg(train)
-      //      println("d")
-
       def prediction(user: Int, item: Int): Double = {
 
         val userAvg = getUserAvg(train)(user,0)
@@ -321,12 +311,13 @@ package object predictions {
       prediction
     }
 
-    def baselineRDDPredictor(itemAverageDev : Map[Int, Double],
-                             userAverage: Map[Int, Double],
-                             globalAverage: Double):
-      (Int, Int) => Double = {
+    def baselineRDDPredictor(train: RDD[Rating]): (Int, Int) => Double = {
+      //create 2 Maps
+      val itemDevAverage = itemAvg(normalizeData(train, userAvg(train)))
+      val userAverage = userAvg(train)
+      val globalAverage = globalAvg(train)
       def prediction(user: Int, item: Int): Double = {
-        if (!(itemAverageDev contains item) || itemAverageDev(item) == 0) {
+        if (!(itemDevAverage contains item) || itemDevAverage(item) == 0) {
           // No rating for i in the training set of the item average dev is 0
           if (!(userAverage contains user)) {
             // The user has no rating
@@ -334,8 +325,9 @@ package object predictions {
           }
           return userAverage(user)
         }
-        val userAvg = userAverage(user)
-        val itemAvgDev = itemAverageDev(item)
+        //If the user doesn't exist we take the the global average as a user average
+        val userAvg = if (!(userAverage contains user)) globalAverage else userAverage(user)
+        val itemAvgDev = itemDevAverage(item)
         userAvg + itemAvgDev * scaleUserRating(userAvg + itemAvgDev, userAvg)
       }
 
@@ -348,13 +340,8 @@ package object predictions {
      * @param predictorFunc Estimates the prediction for given item and user
      * @return Mean Average Error between the predictions and the test
      */
-    def getMAE(train: RDD[Rating], predictorFunc: (Int, Int) => Double): Double = {
-      val itemDevAverage = itemAvg(normalizeData(train, userAvg(train)))
-      val userAverage = userAvg(test)
-      val globalAverage = globalAvg(train)
-      print(test.count())
-      print(test.first())
-      test.map(x => (baselineRDDPredictor(itemDevAverage, userAverage, globalAverage)(x.user, x.item) - x.rating).abs).mean
+    def getMAE(predictorFunc: (Int, Int) => Double): Double = {
+      test.map(x => (predictorFunc(x.user, x.item) - x.rating).abs).mean
     }
   }
 
