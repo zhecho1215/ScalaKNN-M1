@@ -369,7 +369,7 @@ package object predictions {
   }
 
   /**
-   * An enum for similarity functions
+   * An enum for similarity functions.
    */
   sealed trait SimilarityFunctions
 
@@ -408,7 +408,6 @@ package object predictions {
         case Jaccard => userJaccardSimilarity
       }
     }
-
     // Stores the computed similarities
     var similarities: mutable.Map[Int, mutable.Map[Int, Double]] = mutable.Map[Int, mutable.Map[Int, Double]]()
 
@@ -566,8 +565,8 @@ package object predictions {
    * This class contains the functions that generate the results used only in the Neighbourhood-based predictions.
    */
   class KNNSolver(train: Seq[Rating], test: Seq[Rating], k: Int) extends PersonalizedSolver(train, test, Cosine) {
-    // Store the K-nearest neighbors of a user
-    lazy val KNearestUsers: Map[Int, Seq[Int]] = uniqueUsers.map(x => x -> getKNearestUsers(x)).toMap
+    // Stores the K-nearest neighbors of a user
+    var kNearestUsers: Map[Int, Seq[Int]] = Map[Int, Seq[Int]]()
 
     /**
      * Computes the similarity between 2 users as defined in KNN.
@@ -580,9 +579,15 @@ package object predictions {
       if (user1 == user2) {
         return 0
       }
-      if (!KNearestUsers(user1).contains(user2)) {
+
+      if (!kNearestUsers.contains(user1)) {
+        getKNearestUsers(user1)
+      }
+
+      if (!kNearestUsers(user1).contains(user2)) {
         return 0
       }
+
       getSimilarity(user1, user2)
     }
 
@@ -593,20 +598,13 @@ package object predictions {
      * @return The k-nearest neighbours
      */
     private def getKNearestUsers(user: Int): Seq[Int] = {
+      if kNearestUsers.cont
       // Sort users by similarity, descending
       var userSimilarities: Array[(Double, Int)] = Array[(Double, Int)]()
       for (otherUser <- uniqueUsers) {
         userSimilarities = userSimilarities :+ (-getSimilarity(user, otherUser), otherUser)
       }
-      if (user <= 10) {
-        println("Before:")
-        println(userSimilarities.mkString("Array(", ", ", ")"))
-      }
       scala.util.Sorting.quickSort(userSimilarities)
-      if (user <= 10) {
-        println("After:")
-        println(userSimilarities.mkString("Array(", ", ", ")"))
-      }
       // Return the k-nearest neighbors
       val topK = userSimilarities.take(k).map(x => x._2)
       if (topK == null) {
