@@ -395,9 +395,7 @@ package object predictions {
     // The normalized ratings by user
     lazy val normalizedRatingsByUser: Map[Int, Seq[Rating]] = normalizedTrain.groupBy(x => x.user)
     // The preprocessed train set
-    lazy val preprocessedTrain: Seq[Rating] = preprocessData(normalizedTrain, normalizedRatingsByUser)
-    // The preprocessed ratings by user
-    lazy val preprocessedRatingsByUser: Map[Int, Seq[Rating]] = preprocessedTrain.groupBy(x => x.user)
+    var preprocessedRatingsByUser: mutable.Map[Int, Seq[Rating]] = mutable.Map[Int, Seq[Rating]]()
     // The list of unique user IDs
     lazy val uniqueUsers: Seq[Int] = train.map(x => x.user).distinct
     // Stores the similarity function that will be used
@@ -410,36 +408,29 @@ package object predictions {
     }
     // Stores the computed similarities
     var similarities: mutable.Map[Int, mutable.Map[Int, Double]] = mutable.Map[Int, mutable.Map[Int, Double]]()
+    // Store the norm 2 of user rating (as used in eq. 9)
+    var norm2RatingsByUser: mutable.Map[Int, Double] = mutable.Map[Int, Double]()
 
-
-    /**
-     * Preprocess the whole dataset according to the law of multiplication to make computation faster.
-     *
-     * @param data                    The list of all ratings
-     * @param normalizedRatingsByUser The normalized ratings by user
-     * @return The initial dataset, with the preprocessed ratings
-     */
-    def preprocessData(data: Seq[Rating], normalizedRatingsByUser: Map[Int, Seq[Rating]]): Seq[Rating] = {
-      // The 2-norm of user ratings by user
-      val norm2RatingsByUser = mutable.Map[Int, Double]()
-      for ((user, ratings) <- normalizedRatingsByUser) {
-        var norm2 = 0.0
-        for (rating <- ratings) {
-          norm2 += pow(rating.rating, 2)
-        }
-        norm2 = sqrt(norm2)
-        norm2RatingsByUser(user) = norm2
+    def getNorm2RatingsByUser(user: Int): Double = {
+      if (norm2RatingsByUser.contains(user)) {
+        return norm2RatingsByUser(user)
       }
+      var norm2 = 0.0
+      for (rating <- normalizedRatingsByUser(user)) {
+          norm2 += pow(rating.rating, 2)
+      }
+      norm2 = sqrt(norm2)
+      // Store computed norm2
+      norm2RatingsByUser(user) = norm2
+      norm2
+    }
 
-      data.map(x => {
-        val numerator = x.rating
-        val denominator = norm2RatingsByUser(x.user)
-        var fraction: Double = 0.0
-        if (denominator != 0) {
-          fraction = numerator / denominator
-        }
-        Rating(user = x.user, item = x.item, rating = fraction)
-      })
+    def getPreprocessedRating(rating: Rating): Double = {
+      val norm2 = getNorm2RatingsByUser(rating.user)
+      if (norm2 == 0) {
+        return 0.0
+      }
+      rating.rating / norm2
     }
 
     /**
@@ -458,13 +449,13 @@ package object predictions {
       if (user1 == user2) {
         return 0
       }
-      val user1Ratings = preprocessedRatingsByUser.getOrElse(user1, Seq())
-      val user2Ratings = preprocessedRatingsByUser.getOrElse(user2, Seq())
+      val user1Ratings = normalizedRatingsByUser.getOrElse(user1, Seq())
+      val user2Ratings = normalizedRatingsByUser.getOrElse(user2, Seq())
 
       var similarity = 0.0
       for (a <- user1Ratings; b <- user2Ratings) {
         if (a.item == b.item) {
-          similarity += a.rating * b.rating
+          similarity += getPreprocessedRating(a) * getPreprocessedRating(b)
         }
       }
       similarity
@@ -521,7 +512,7 @@ package object predictions {
       var numerator = 0.0
       var denominator = 0.0
       for (rating <- relevantRatings) {
-        var similarity = getSimilarity(user, rating.user)
+        val similarity = getSimilarity(user, rating.user)
         numerator = numerator + similarity * rating.rating
         denominator = denominator + abs(similarity)
       }
@@ -566,7 +557,7 @@ package object predictions {
    */
   class KNNSolver(train: Seq[Rating], test: Seq[Rating], k: Int) extends PersonalizedSolver(train, test, Cosine) {
     // Stores the K-nearest neighbors of a user
-    var kNearestUsers: Map[Int, Seq[Int]] = Map[Int, Seq[Int]]()
+    var kNearestUsers: mutable.Map[Int, Seq[Int]] = mutable.Map[Int, Seq[Int]]()
 
     /**
      * Computes the similarity between 2 users as defined in KNN.
@@ -598,7 +589,9 @@ package object predictions {
      * @return The k-nearest neighbours
      */
     private def getKNearestUsers(user: Int): Seq[Int] = {
-      if kNearestUsers.cont
+      if (kNearestUsers.contains(user)) {
+        return kNearestUsers(user)
+      }
       // Sort users by similarity, descending
       var userSimilarities: Array[(Double, Int)] = Array[(Double, Int)]()
       for (otherUser <- uniqueUsers) {
@@ -610,6 +603,8 @@ package object predictions {
       if (topK == null) {
         return Seq[Int]()
       }
+      // Store computed k-nearest users
+      kNearestUsers(user) = topK.toSeq
       topK.toSeq
     }
 
@@ -621,7 +616,7 @@ package object predictions {
      * @return The rating.
      */
     override def getUserItemAvgDev(user: Int, item: Int): Double = {
-      val relevantRatings = KNearestUsers(user)
+      val relevantRatings = getKNearestUsers(user)
         .flatMap(x => normalizedRatingsByUser(x).filter(y => y.item == item))
       var numerator = 0.0
       var denominator = 0.0

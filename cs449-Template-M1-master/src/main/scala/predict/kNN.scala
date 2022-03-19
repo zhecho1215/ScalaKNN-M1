@@ -78,16 +78,16 @@ object kNN extends App {
                       ujson.Num(solver10.personalizedPredictor(1, 1))
         ),
         "N.2" -> ujson.Obj(
-//                    "1.kNN-Mae" -> List(10, 30, 50, 100, 200, 300, 400, 800, 943).map(k =>
-//                      List(
-//                        k,
-//                        {
-//                          // Initialize new solver each time
-//                          val solver = new KNNSolver(train, test, k)
-//                          solver.getMAE
-//                        }
-//                      )
-//                    ).toList
+                    "1.kNN-Mae" -> List(10, 30, 50, 100, 200, 300, 400, 800, 943).map(k =>
+                      List(
+                        k,
+                        {
+                          // Initialize new solver each time
+                          val solver = new KNNSolver(train, test, k)
+                          solver.getMAE
+                        }
+                      )
+                    ).toList
         ),
         "N.3" -> ujson.Obj(
           "1.kNN" -> ujson.Obj(
