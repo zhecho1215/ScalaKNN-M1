@@ -1,4 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_16" default="true" project-jdk-name="openjdk-16" project-jdk-type="JavaSDK" />
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="true" project-jdk-name="1.8" project-jdk-type="JavaSDK" />
+  <component name="UnattendedHostPersistenceState">
+    <option name="openedFilesInfos">
+      <list>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="21542" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/shared/predictions/predictions.scala" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="3182" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/predict/kNN.scala" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="2658" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/recommend/Recommender.scala" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-19-00:35:28-iccluster028/knn-100k.json" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-19-00:35:28-iccluster028/log.txt" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="254" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-19-00:46:39-iccluster028/knn-100k.json" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-19-00:46:39-iccluster028/log.txt" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-19-00:48:27-iccluster028/knn-100k.json" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/README.md" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-19-00:56:05-iccluster028/knn-100k.json" />
+        </OpenedFileInfo>
+      </list>
+    </option>
+  </component>
 </project>
