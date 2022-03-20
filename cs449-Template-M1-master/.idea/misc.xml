@@ -5,12 +5,8 @@
     <option name="openedFilesInfos">
       <list>
         <OpenedFileInfo>
-          <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-20-22:12:34-iccluster028/knn-100k.json" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-20-22:16:58-iccluster028/knn-100k.json" />
+          <option name="caretOffset" value="25145" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/shared/predictions/predictions.scala" />
         </OpenedFileInfo>
         <OpenedFileInfo>
           <option name="caretOffset" value="0" />
@@ -41,8 +37,12 @@
           <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-20-22:54:01-iccluster028/log.txt" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="25241" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/shared/predictions/predictions.scala" />
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-20-22:57:40-iccluster028/log.txt" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/.gitignore" />
         </OpenedFileInfo>
       </list>
     </option>

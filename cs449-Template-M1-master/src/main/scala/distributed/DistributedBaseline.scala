@@ -42,7 +42,7 @@ object DistributedBaseline extends App {
 
   val measurements = (1 to conf.num_measurements()).map(x => timingInMs(() => {
     val solver = new DistributedSolvers(test)
-    solver.getMAE(train, solver.baselinePredictor(train))
+    solver.getMAE(solver.baselineRDDPredictor(train))
   }))
   val timings = measurements.map(t => t._2) // Retrieve the timing measurements
 
@@ -80,7 +80,7 @@ object DistributedBaseline extends App {
 //          // Datatype of answer: Double
 //          "5.PredUser1Item1" -> ujson.Num(solver.baselinePredictor(train)(1, 1)),
            //Datatype of answer: Double
-          "6.Mae" -> ujson.Num(solver.getMAE(train, solver.baselinePredictor(train)))
+          "6.Mae" -> ujson.Num(solver.getMAE(solver.baselineRDDPredictor(train)))
         ),
         "D.2" -> ujson.Obj(
           "1.DistributedBaseline" -> ujson.Obj(
