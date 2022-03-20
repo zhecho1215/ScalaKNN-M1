@@ -385,7 +385,6 @@ package object predictions {
       val itemDevAverage = itemAvg(normalizeData(train, userAvg(train)))
       val userAverage = userAvg(train)
       val globalAverage = globalAvg(train)
-
       def prediction(user: Int, item: Int): Double = {
         if (!(itemDevAverage contains item) || itemDevAverage(item) == 0) {
           // No rating for i in the training set of the item average dev is 0
