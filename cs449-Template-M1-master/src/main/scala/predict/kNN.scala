@@ -1,17 +1,22 @@
 package predict
 
-import org.apache.log4j.{Level, Logger}
-import org.apache.spark.sql.SparkSession
 import org.rogach.scallop._
-import shared.predictions._
+import org.apache.spark.rdd.RDD
 import ujson._
+
+import org.apache.spark.sql.SparkSession
+import org.apache.log4j.Logger
+import org.apache.log4j.Level
+
+import scala.math
+import shared.predictions._
 
 
 class kNNConf(arguments: Seq[String]) extends ScallopConf(arguments) {
   val train = opt[String](required = true)
   val test = opt[String](required = true)
-  val separator = opt[String](default = Some("\t"))
-  val num_measurements = opt[Int](default = Some(0))
+  val separator = opt[String](default=Some("\t"))
+  val num_measurements = opt[Int](default=Some(0))
   val json = opt[String]()
   verify()
 }
@@ -34,29 +39,23 @@ object kNN extends App {
   println("Loading test data from: " + conf.test())
   val test = load(spark, conf.test(), conf.separator()).collect()
 
-  // Initialize the solver for questions related to the KNN algorithm.
+  // Initialize solver with k = 10
   val solver10 = new KNNSolver(train, test, k = 10)
 
   val measurements = (1 to conf.num_measurements()).map(x => timingInMs(() => {
-    {
-      val solver300 = new KNNSolver(train, test, k = 300)
+    val solver300 = new KNNSolver(train, test, k = 300)
       solver300.getMAE
-    }
   }))
   val timings = measurements.map(t => t._2) // Retrieve the timing measurements
 
   // Save answers as JSON
   def printToFile(content: String,
                   location: String = "./answers.json") =
-    Some(new java.io.PrintWriter(location)).foreach {
-      f =>
-        try {
-          f.write(content)
-        } finally {
-          f.close
-        }
+    Some(new java.io.PrintWriter(location)).foreach{
+      f => try{
+        f.write(content)
+      } finally{ f.close }
     }
-
   conf.json.toOption match {
     case None => ;
     case Some(jsonFile) => {
@@ -78,16 +77,15 @@ object kNN extends App {
                       ujson.Num(solver10.personalizedPredictor(1, 1))
         ),
         "N.2" -> ujson.Obj(
-                    "1.kNN-Mae" -> List(10, 30, 50, 100, 200, 300, 400, 800, 943).map(k =>
-                      List(
-                        k,
-                        {
-                          // Initialize new solver each time
-                          val solver = new KNNSolver(train, test, k)
-                          solver.getMAE
-                        }
-                      )
-                    ).toList
+          "1.kNN-Mae" -> List(10,30,50,100,200,300,400,800,943).map(k =>
+            List(
+              k, {
+              // Initialize new solver each time
+              val solver = new KNNSolver(train, test, k)
+              solver.getMAE
+            }
+          )
+        ).toList
         ),
         "N.3" -> ujson.Obj(
           "1.kNN" -> ujson.Obj(
@@ -103,7 +101,6 @@ object kNN extends App {
       printToFile(json, jsonFile)
     }
   }
-  // TODO: fix code
 
   println("")
   spark.close()

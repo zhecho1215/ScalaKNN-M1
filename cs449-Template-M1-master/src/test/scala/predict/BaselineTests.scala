@@ -36,7 +36,7 @@ class BaselineTests extends AnyFunSuite with BeforeAndAfterAll {
        train2 = load(spark, train2Path, separator).collect()
        test2 = load(spark, test2Path, separator).collect()
 
-       solver = new BaselineSolver(test2)
+       solver = new BaselineSolver(train2, test2)
    }
 
    // All the functions definitions for the tests below (and the tests in other suites) 
@@ -51,7 +51,7 @@ class BaselineTests extends AnyFunSuite with BeforeAndAfterAll {
    test("Compute global average")                           { assert(within(solver.globalAvgPredictor(train2)(0,0), 3.5264625, 0.0001)) }
    test("Compute user 1 average")                           { assert(within(solver.userAvgPredictor(train2)(1,0), 3.63302752293578, 0.0001)) }
    test("Compute item 1 average")                           { assert(within(solver.itemAvgPredictor(train2)(0,1), 3.888268156424581, 0.0001)) }
-   test("Compute item 1 average deviation")                 { assert(within(solver.itemAvgDev(train2, 1), 0.3027072341444875, 0.0001)) }
+   test("Compute item 1 average deviation")                 { assert(within(solver.itemAvgDev(train2)(1), 0.3027072341444875, 0.0001)) }
    test("Compute baseline prediction for user 1 on item 1") { assert(within(solver.baselinePredictor(train2)(1,1), 4.046819980619529, 0.0001)) }
 
    // Show how to compute the MAE on all four non-personalized methods:

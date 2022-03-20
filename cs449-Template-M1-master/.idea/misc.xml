@@ -5,20 +5,44 @@
     <option name="openedFilesInfos">
       <list>
         <OpenedFileInfo>
-          <option name="caretOffset" value="15096" />
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-20-22:12:34-iccluster028/knn-100k.json" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-20-22:16:58-iccluster028/knn-100k.json" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-20-22:16:58-iccluster028/log.txt" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-20-22:22:29-iccluster028/log.txt" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-20-22:46:29-iccluster028/knn-100k.json" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-20-22:48:41-iccluster028/knn-100k.json" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="1249" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-20-22:50:39-iccluster028/knn-100k.json" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-20-22:54:01-iccluster028/knn-100k.json" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-20-22:54:01-iccluster028/log.txt" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="25241" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/shared/predictions/predictions.scala" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="1243" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-19-11:18:38-iccluster028/knn-100k.json" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="288" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-19-12:59:04-iccluster028/knn-100k.json" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="3266" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/predict/kNN.scala" />
         </OpenedFileInfo>
       </list>
     </option>

@@ -1,21 +1,39 @@
 {
     "Meta": {
-        "1.Train": "data/ml-100k/u2.base",
+        "1.Train": 3,
+        "Size Train": 80000,
         "2.Test": "data/ml-100k/u2.test",
         "3.Measurements": 3
     },
-    "P.1": {
-        "1.PredUser1Item1": 4.046819980619529,
-        "2.OnesMAE": 0.7604467914538644
+    "B.1": {
+        "1.GlobalAvg": 3.5264625,
+        "2.User1Avg": 3.63302752293578,
+        "3.Item1Avg": 3.888268156424581,
+        "4.Item1AvgDev": 0.3027072341444875,
+        "5.PredUser1Item1": 4.046819980619529
     },
-    "P.2": {
-        "1.AdjustedCosineUser1User2": 0.07303711860794568,
-        "2.PredUser1Item1": 4.08702725876936,
-        "3.AdjustedCosineMAE": 0.7372314455896456
+    "B.2": {
+        "1.GlobalAvgMAE": 0.9489109899999697,
+        "2.UserAvgMAE": 0.8383401457987351,
+        "3.ItemAvgMAE": 0.8188963496888565,
+        "4.BaselineMAE": 0.7604467914538644
     },
-    "P.3": {
-        "1.JaccardUser1User2": 0.03187250996015936,
-        "2.PredUser1Item1": 4.098236648361599,
-        "3.JaccardPersonalizedMAE": 0.7556138848602905
+    "B.3": {
+        "1.GlobalAvg": {
+            "average (ms)": 13.646518666666665,
+            "stddev (ms)": 2.8110666439828287
+        },
+        "2.UserAvg": {
+            "average (ms)": 22.768229333333334,
+            "stddev (ms)": 1.2012220765554653
+        },
+        "3.ItemAvg": {
+            "average (ms)": 43.038184333333334,
+            "stddev (ms)": 14.630261426837738
+        },
+        "4.Baseline": {
+            "average (ms)": 119.490744,
+            "stddev (ms)": 31.820473872803227
+        }
     }
 }

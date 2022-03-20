@@ -36,7 +36,7 @@ object Baseline extends App {
   val test = load(spark, conf.test(), conf.separator()).collect()
 
   // Initialize the solvers for questions in B
-  val solver = new BaselineSolver(test)
+  val solver = new BaselineSolver(train, test)
 
   // Get timing for each of the 4 methods
   var timings = scala.collection.mutable.Map.empty[String, Seq[Double]]
@@ -83,7 +83,7 @@ object Baseline extends App {
           "3.Item1Avg" -> ujson.Num(solver.itemAvgPredictor(train)(0, 1)),
           // Datatype of answer: Double
           "4.Item1AvgDev" ->
-            ujson.Num(solver.itemAvgDev(train, 1)),
+            ujson.Num(solver.itemAvgDev(train)(1)),
           // Datatype of answer: Double
           "5.PredUser1Item1" -> ujson.Num(solver.baselinePredictor(train)(1, 1))
         ),
