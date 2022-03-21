@@ -2,9 +2,7 @@ package test
 
 import org.scalatest._
 import funsuite._
-
 import test.distributed._
-import test.predict._
 
 class AllTests extends Sequential(
   new test.predict.BaselineTests,

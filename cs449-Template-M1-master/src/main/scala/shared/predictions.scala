@@ -1,8 +1,7 @@
 package shared
-
 import org.apache.spark.rdd.RDD
 
-import scala.collection.{breakOut, mutable}
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.math.{abs, pow, sqrt}
 
@@ -463,8 +462,8 @@ package object predictions {
     def getNormalizedRatingsByUser(user: Int): Seq[Rating] = {
       if (!normalizedRatingsByUser.contains(user)) {
         val normalizedRatings:ArrayBuffer[Rating] = ArrayBuffer()
-          for (rating <- ratingsByUser(user)) {
-            normalizedRatings += Rating(rating.user, rating.item, normalizeRating(rating))
+        for (rating <- ratingsByUser(user)) {
+          normalizedRatings += Rating(rating.user, rating.item, normalizeRating(rating))
         }
         normalizedRatingsByUser(user) = normalizedRatings
       }
@@ -498,7 +497,7 @@ package object predictions {
       }
       var norm2 = 0.0
       for (rating <- getNormalizedRatingsByUser(user)) {
-          norm2 += pow(rating.rating, 2)
+        norm2 += pow(rating.rating, 2)
       }
       norm2 = sqrt(norm2)
       // Store computed norm2
@@ -580,18 +579,18 @@ package object predictions {
       if (!similarities.contains(user1)) {
         similarities(user1) = mutable.Map[Int, Double]()
       }
-        if (similarities(user1).contains(user2)) {
-          // Similarity was already computed
-          similarity = similarities(user1)(user2)
-        } else {
-          similarity = similarityFunc(user1, user2)
-          // Store similarity
-          similarities(user1)(user2) = similarity
-          if (!similarities.contains(user2)) {
-            similarities(user2) = mutable.Map[Int, Double]()
-          }
-          similarities(user2)(user1) = similarity
+      if (similarities(user1).contains(user2)) {
+        // Similarity was already computed
+        similarity = similarities(user1)(user2)
+      } else {
+        similarity = similarityFunc(user1, user2)
+        // Store similarity
+        similarities(user1)(user2) = similarity
+        if (!similarities.contains(user2)) {
+          similarities(user2) = mutable.Map[Int, Double]()
         }
+        similarities(user2)(user1) = similarity
+      }
       similarity
     }
 
@@ -776,4 +775,3 @@ package object predictions {
     }
   }
 }
-

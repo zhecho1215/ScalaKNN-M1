@@ -59,7 +59,7 @@ class kNNTests extends AnyFunSuite with BeforeAndAfterAll {
      assert(within(solver.kNearestSimilarity(1, 886), 0.0, 0.0001))
 
      // Prediction user 1 and item 1
-     assert(within(solver.personalizedPredictor(similarityFunc = solver.userCosineSimilarity)(1, 1), 4.319093503763853, 0.0001))
+     assert(within(solver.personalizedPredictor(1, 1), 4.319093503763853, 0.0001))
 
      // MAE on test2 
      assert(within(solver.getMAE(solver.userCosineSimilarity), 0.8287277961963556, 0.0001))

@@ -35,7 +35,6 @@ class BaselineTests extends AnyFunSuite with BeforeAndAfterAll {
        // to not depend on Spark
        train2 = load(spark, train2Path, separator).collect()
        test2 = load(spark, test2Path, separator).collect()
-
        solver = new BaselineSolver(train2, test2)
    }
 

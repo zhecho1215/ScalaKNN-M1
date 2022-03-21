@@ -13,15 +13,16 @@ import tests.shared.helpers._
 import ujson._
 
 class PersonalizedTests extends AnyFunSuite with BeforeAndAfterAll {
-
-   val separator = "\t"
+  val separator = "\t"
    var spark : org.apache.spark.sql.SparkSession = _
 
    val train2Path = "data/ml-100k/u2.base"
    val test2Path = "data/ml-100k/u2.test"
    var train2 : Array[shared.predictions.Rating] = null
    var test2 : Array[shared.predictions.Rating] = null
-   var solver : PersonalizedSolver = null
+   var uniformSolver : PersonalizedSolver = null
+   var cosineSolver : PersonalizedSolver = null
+   var jaccardSolver : PersonalizedSolver = null
    override def beforeAll {
        Logger.getLogger("org").setLevel(Level.OFF)
        Logger.getLogger("akka").setLevel(Level.OFF)
@@ -33,7 +34,9 @@ class PersonalizedTests extends AnyFunSuite with BeforeAndAfterAll {
        // to not depend on Spark
        train2 = load(spark, train2Path, separator).collect()
        test2 = load(spark, test2Path, separator).collect()
-       solver = new PersonalizedSolver(train2, test2)
+       uniformSolver = new PersonalizedSolver(train2, test2, Uniform)
+       cosineSolver = new PersonalizedSolver(train2, test2, Cosine)
+       jaccardSolver = new PersonalizedSolver(train2, test2, Jaccard)
    }
 
    // All the functions definitions for the tests below (and the tests in other suites) 
@@ -48,35 +51,35 @@ class PersonalizedTests extends AnyFunSuite with BeforeAndAfterAll {
      // Create predictor with uniform similarities
      
      // Compute personalized prediction for user 1 on item 1
-     assert(within(solver.personalizedPredictor(solver.userUniformSimilarity)(1, 1), 4.046819980619529, 0.0001))
+     assert(within(uniformSolver.personalizedPredictor(1, 1), 4.046819980619529, 0.0001))
 
      // MAE 
-     assert(within(solver.getMAE(similarityFunc = solver.userUniformSimilarity), 0.7604467914538644, 0.0001))
+     assert(within(uniformSolver.getMAE, 0.7604467914538644, 0.0001))
    } 
 
    test("Test ajusted cosine similarity") { 
      // Create predictor with adjusted cosine similarities
 
      // Similarity between user 1 and user 2
-     assert(within(solver.userCosineSimilarity(1, 2), 0.07303711860794568, 0.0001))
+     assert(within(cosineSolver.personalizedPredictor(1, 2), 0.07303711860794568, 0.0001))
 
      // Compute personalized prediction for user 1 on item 1
-     assert(within(solver.personalizedPredictor(similarityFunc = solver.userCosineSimilarity)(1, 1), 4.08702725876936, 0.0001))
+     assert(within(cosineSolver.personalizedPredictor(1, 1), 4.08702725876936, 0.0001))
 
      // MAE 
-     assert(within(solver.getMAE(similarityFunc = solver.userCosineSimilarity), 0.7372314455896454, 0.0001))
+     assert(within(cosineSolver.getMAE, 0.7372314455896454, 0.0001))
    }
 
    test("Test jaccard similarity") { 
      // Create predictor with jaccard similarities
 
      // Similarity between user 1 and user 2
-     assert(within(solver.userJaccardSimilarity(1, 2), 0.03187250996015936, 0.0001))
+     assert(within(jaccardSolver.personalizedPredictor(1, 2), 0.03187250996015936, 0.0001))
 
      // Compute personalized prediction for user 1 on item 1
-     assert(within(solver.personalizedPredictor(similarityFunc = solver.userJaccardSimilarity)(1, 1), 4.098236648361599, 0.0001))
+     assert(within(jaccardSolver.personalizedPredictor(1, 1), 4.098236648361599, 0.0001))
 
      // MAE 
-     assert(within(solver.getMAE(similarityFunc = solver.userJaccardSimilarity), 0.7556138848602905, 0.0001))
+     assert(within(jaccardSolver.getMAE, 0.7556138848602905, 0.0001))
    }
 }

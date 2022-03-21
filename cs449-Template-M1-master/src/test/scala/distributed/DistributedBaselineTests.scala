@@ -56,6 +56,6 @@ class DistributedBaselineTests extends AnyFunSuite with BeforeAndAfterAll {
    // 2. There should be a single reusable function to compute the MAE on the test set, given a predictor;
    // 3. There should be invocations of both to show they work on the following datasets.
    test("MAE on all four non-personalized methods on data/ml-100k/u2.base and data/ml-100k/u2.test") {
-     assert(within(solver.getMAE(train2, solver.baselinePredictor(train2)), 0.7604467914538644, 0.0001))
+     assert(within(solver.getMAE(solver.baselinePredictor(train2)), 0.7604467914538644, 0.0001))
    }
 }

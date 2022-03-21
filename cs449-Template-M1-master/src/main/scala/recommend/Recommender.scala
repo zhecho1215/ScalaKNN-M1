@@ -73,8 +73,7 @@ object Recommender extends App {
         ),
         "R.1" -> ujson.Obj(
           // Prediction for user 1 of item 1
-          "PredUser1Item1" ->
-            ujson.Num(solver.personalizedPredictor(1, 1))
+          "PredUser1Item1" -> ujson.Num(solver.personalizedPredictor(1, 1))
           // IMPORTANT: To break ties and ensure reproducibility of results,
           // please report the top-3 recommendations that have the smallest
           // movie identifier.

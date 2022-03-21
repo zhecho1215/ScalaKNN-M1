@@ -82,8 +82,7 @@ object Baseline extends App {
           // Datatype of answer: Double
           "3.Item1Avg" -> ujson.Num(solver.itemAvgPredictor(train)(0, 1)),
           // Datatype of answer: Double
-          "4.Item1AvgDev" ->
-            ujson.Num(solver.itemAvgDev(train)(1)),
+          "4.Item1AvgDev" -> ujson.Num(solver.itemAvgDev(train)(1)),
           // Datatype of answer: Double
           "5.PredUser1Item1" -> ujson.Num(solver.baselinePredictor(train)(1, 1))
         ),

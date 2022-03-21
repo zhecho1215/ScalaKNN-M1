@@ -1,5 +1,4 @@
 package predict
-
 import org.rogach.scallop._
 import org.apache.spark.rdd.RDD
 import ujson._
@@ -51,11 +50,16 @@ object kNN extends App {
   // Save answers as JSON
   def printToFile(content: String,
                   location: String = "./answers.json") =
-    Some(new java.io.PrintWriter(location)).foreach{
-      f => try{
-        f.write(content)
-      } finally{ f.close }
+
+    Some(new java.io.PrintWriter(location)).foreach {
+      f =>
+        try {
+          f.write(content)
+        } finally {
+          f.close
+        }
     }
+
   conf.json.toOption match {
     case None => ;
     case Some(jsonFile) => {
@@ -101,7 +105,6 @@ object kNN extends App {
       printToFile(json, jsonFile)
     }
   }
-
   println("")
   spark.close()
 }
