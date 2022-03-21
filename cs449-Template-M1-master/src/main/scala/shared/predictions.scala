@@ -462,6 +462,9 @@ package object predictions {
     def getNormalizedRatingsByUser(user: Int): Seq[Rating] = {
       if (!normalizedRatingsByUser.contains(user)) {
         val normalizedRatings:ArrayBuffer[Rating] = ArrayBuffer()
+        if (!ratingsByUser.contains(user)) {
+          return Seq[Rating]()
+        }
         for (rating <- ratingsByUser(user)) {
           normalizedRatings += Rating(rating.user, rating.item, normalizeRating(rating))
         }
@@ -478,6 +481,9 @@ package object predictions {
     def getNormalizedRatingsByItem(item: Int): Seq[Rating] = {
       if (!normalizedRatingsByItem.contains(item)) {
         val normalizedRatings: ArrayBuffer[Rating] = ArrayBuffer()
+        if (!ratingsByItem.contains(item)) {
+          return Seq[Rating]()
+        }
         for (rating <- ratingsByItem(item)) {
           normalizedRatings += Rating(rating.user, rating.item, normalizeRating(rating))
         }
@@ -602,9 +608,9 @@ package object predictions {
      * @return The rating.
      */
     def getUserItemAvgDev(user: Int, item: Int): Double = {
-      val relevantRatings = ratingsByItem(item)
       var numerator = 0.0
       var denominator = 0.0
+      val relevantRatings = getNormalizedRatingsByItem(item)
       for (rating <- relevantRatings) {
         val similarity = getSimilarity(user, rating.user)
         numerator = numerator + similarity * rating.rating

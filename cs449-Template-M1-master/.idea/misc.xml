@@ -5,32 +5,40 @@
     <option name="openedFilesInfos">
       <list>
         <OpenedFileInfo>
-          <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/distributed/DistributedBaseline.scala" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/predict/Baseline.scala" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="279" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/src/test/scala/predict/kNNTests.scala" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="3072" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/src/test/scala/distributed/DistributedBaselineTests.scala" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
           <option name="caretOffset" value="15" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/predict/kNN.scala" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="7054" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/shared/predictions.scala" />
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-21-11:14:42-iccluster028/knn-100k.json" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-21-11:14:42-iccluster028/log.txt" />
         </OpenedFileInfo>
         <OpenedFileInfo>
           <option name="caretOffset" value="2205" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/src/test/scala/predict/PersonalizedTests.scala" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/timeOthers.sh" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/timeCluster.sh" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/test.sh" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/README.md" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="20969" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/shared/predictions.scala" />
         </OpenedFileInfo>
       </list>
     </option>

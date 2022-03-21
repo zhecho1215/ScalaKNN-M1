@@ -5,17 +5,17 @@
         "3.Measurements": 0
     },
     "P.1": {
-        "1.PredUser1Item1": 3.5264625,
-        "2.OnesMAE": 0.9489109899999697
+        "1.PredUser1Item1": 4.046819980619529,
+        "2.OnesMAE": 0.7604467914538644
     },
     "P.2": {
         "1.AdjustedCosineUser1User2": 0.07303711860794568,
-        "2.PredUser1Item1": 3.63302752293578,
-        "3.AdjustedCosineMAE": 0.9487922315533093
+        "2.PredUser1Item1": 4.08702725876936,
+        "3.AdjustedCosineMAE": 0.7372314455896454
     },
     "P.3": {
         "1.JaccardUser1User2": 0.03187250996015936,
-        "2.PredUser1Item1": 3.63302752293578,
-        "3.JaccardPersonalizedMAE": 0.9487922315533093
+        "2.PredUser1Item1": 4.098236648361599,
+        "3.JaccardPersonalizedMAE": 0.7556138848602905
     }
 }
