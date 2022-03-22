@@ -6,43 +6,27 @@
       <list>
         <OpenedFileInfo>
           <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-03:33:38-iccluster028/knn-100k.json" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-20:08:23-iccluster028/knn-100k.json" />
         </OpenedFileInfo>
         <OpenedFileInfo>
           <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-03:58:10-iccluster028/log.txt" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-20:09:28-iccluster028/knn-100k.json" />
         </OpenedFileInfo>
         <OpenedFileInfo>
           <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-03:59:32-iccluster028/log.txt" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-20:15:09-iccluster028/knn-100k.json" />
         </OpenedFileInfo>
         <OpenedFileInfo>
           <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-04:33:32-iccluster028/knn-100k.json" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-20:16:15-iccluster028/knn-100k.json" />
         </OpenedFileInfo>
         <OpenedFileInfo>
           <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-04:33:32-iccluster028/log.txt" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-20:17:46-iccluster028/knn-100k.json" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="27032" />
+          <option name="caretOffset" value="19568" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/shared/predictions.scala" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="2205" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/src/test/scala/predict/PersonalizedTests.scala" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-16:17:02-iccluster028/knn-100k.json" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-16:17:02-iccluster028/log.txt" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-03:58:10-iccluster028/knn-100k.json" />
         </OpenedFileInfo>
       </list>
     </option>
