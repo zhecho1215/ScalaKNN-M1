@@ -71,9 +71,9 @@ package object predictions {
    */
   class BaselineSolver(train: Seq[Rating], test: Seq[Rating]) {
     // The train ratings grouped by user
-    lazy val ratingsByUser: Map[Int, Seq[Rating]] = train.groupBy(x => x.user)
+    lazy val ratingsByUser: Map[Int, Seq[Rating]] = train.view.groupBy(x => x.user)
     // The train ratings grouped by item
-    lazy val ratingsByItem: Map[Int, Seq[Rating]] = train.groupBy(x => x.item)
+    lazy val ratingsByItem: Map[Int, Seq[Rating]] = train.view.groupBy(x => x.item)
 
     // A function that returns the global average rating given a train set
     val globalAvg: Seq[Rating] => Double = (train: Seq[Rating]) => {
@@ -85,14 +85,14 @@ package object predictions {
     }
 
     // A function that returns the average rating by user given a train set
-    val userAvg: Seq[Rating] => Map[Int, Double] = (train: Seq[Rating]) => train.groupBy(x => x.user).map {
+    val userAvg: Seq[Rating] => Map[Int, Double] = (train: Seq[Rating]) => train.view.groupBy(x => x.user).map {
       case (k, v) => (k, mean(v.map(x => x.rating)))
     }
     // The computed average rating per user is stored in a map
     val avgRatingByUser: mutable.Map[Int, Double] = mutable.Map[Int, Double]()
 
     // A function that returns the average rating by item given a train set
-    val itemAvg: Seq[Rating] => Map[Int, Double] = (train: Seq[Rating]) => train.groupBy(x => x.item).map {
+    val itemAvg: Seq[Rating] => Map[Int, Double] = (train: Seq[Rating]) => train.view.groupBy(x => x.item).map {
       case (k, v) => (k, mean(v.map(x => x.rating)))
     }
 
@@ -432,7 +432,7 @@ package object predictions {
     // The average global rating
     lazy val avgGlobal: Double = globalAvg(train)
     // The normalized ratings by user
-    var normalizedRatingsByUser: mutable.Map[Int, Seq[Rating]] = mutable.Map[Int, Seq[Rating]]()
+    var normalizedRatingsByUser: mutable.Map[Int, mutable.Map[Int, Double]] = mutable.Map[Int, mutable.Map[Int, Double]]()
     // The normalized ratings by item
     var normalizedRatingsByItem: mutable.Map[Int, Seq[Rating]] = mutable.Map[Int, Seq[Rating]]()
     // The preprocessed train set
@@ -459,16 +459,15 @@ package object predictions {
      * @param user The user for which the normalized ratings will be computed
      * @return The normalized ratings
      */
-    def getNormalizedRatingsByUser(user: Int): Seq[Rating] = {
+    def getNormalizedRatingsByUser(user: Int): mutable.Map[Int, Double] = {
       if (!normalizedRatingsByUser.contains(user)) {
-        val normalizedRatings:ArrayBuffer[Rating] = ArrayBuffer()
         if (!ratingsByUser.contains(user)) {
-          return Seq[Rating]()
+          return mutable.Map[Int, Double]()
         }
+        normalizedRatingsByUser(user) = mutable.Map[Int, Double]()
         for (rating <- ratingsByUser(user)) {
-          normalizedRatings += Rating(rating.user, rating.item, normalizeRating(rating))
+          normalizedRatingsByUser(user)(rating.item) = normalizeRating(rating)
         }
-        normalizedRatingsByUser(user) = normalizedRatings
       }
       normalizedRatingsByUser(user)
     }
@@ -502,8 +501,8 @@ package object predictions {
         return norm2RatingsByUser(user)
       }
       var norm2 = 0.0
-      for (rating <- getNormalizedRatingsByUser(user)) {
-        norm2 += pow(rating.rating, 2)
+      for (rating <- getNormalizedRatingsByUser(user).values) {
+        norm2 += pow(rating, 2)
       }
       norm2 = sqrt(norm2)
       // Store computed norm2
@@ -513,15 +512,16 @@ package object predictions {
 
     /**
      * Preprocesses a rating according to eq. 9.
-     * @param rating The rating that will be preprocessed
+     * @param user The user that made the rating
+     * @param rating The rating that was given
      * @return The preprocessed rating
      */
-    def getPreprocessedRating(rating: Rating): Double = {
-      val norm2 = getNorm2RatingsByUser(rating.user)
+    def getPreprocessedRating(user: Int, rating: Double): Double = {
+      val norm2 = getNorm2RatingsByUser(user)
       if (norm2 == 0) {
         return 0.0
       }
-      rating.rating / norm2
+      rating / norm2
     }
 
     /**
@@ -542,11 +542,18 @@ package object predictions {
       }
       val user1Ratings = getNormalizedRatingsByUser(user1)
       val user2Ratings = getNormalizedRatingsByUser(user2)
-
       var similarity = 0.0
-      for (a <- user1Ratings; b <- user2Ratings) {
-        if (a.item == b.item) {
-          similarity += getPreprocessedRating(a) * getPreprocessedRating(b)
+      if (user1Ratings.size > user2Ratings.size) {
+        for (a <- user2Ratings.keys) {
+          if (user1Ratings.contains(a)) {
+            similarity += getPreprocessedRating(user1, user1Ratings(a)) * getPreprocessedRating(user2, user2Ratings(a))
+          }
+        }
+      } else {
+        for (a <- user1Ratings.keys) {
+          if (user2Ratings.contains(a)) {
+            similarity += getPreprocessedRating(user1, user1Ratings(a)) * getPreprocessedRating(user2, user2Ratings(a))
+          }
         }
       }
       similarity
@@ -564,8 +571,8 @@ package object predictions {
       if (user1 == user2) {
         return 0
       }
-      val user1Ratings = getNormalizedRatingsByUser(user1).map(x => x.item).toSet
-      val user2Ratings = getNormalizedRatingsByUser(user2).map(x => x.item).toSet
+      val user1Ratings = getNormalizedRatingsByUser(user1).keys.toSet
+      val user2Ratings = getNormalizedRatingsByUser(user2).keys.toSet
       val itemIntersection = user1Ratings.intersect(user2Ratings).size
       val itemUnion = user1Ratings.union(user2Ratings).size
       if (itemUnion == 0) {
@@ -612,9 +619,11 @@ package object predictions {
       var denominator = 0.0
       val relevantRatings = getNormalizedRatingsByItem(item)
       for (rating <- relevantRatings) {
-        val similarity = getSimilarity(user, rating.user)
-        numerator = numerator + similarity * rating.rating
-        denominator = denominator + abs(similarity)
+        if (user != rating.user) {
+          val similarity = getSimilarity(user, rating.user)
+          numerator = numerator + similarity * rating.rating
+          denominator = denominator + abs(similarity)
+        }
       }
       if (denominator != 0) {
         return numerator / denominator
@@ -713,13 +722,13 @@ package object predictions {
           return kNearestUsers(user)
         }
         if (userSimilarity._2 != user) {
+          // Avoid including self in the list of neighbors
           kNearestUsers(user)(userSimilarity._2) = -userSimilarity._1
           cnt += 1
         }
       }
       kNearestUsers(user)
     }
-
 
 
     /**
