@@ -1,4 +1,5 @@
 package shared
+
 import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable
@@ -64,7 +65,8 @@ package object predictions {
     }
   }
 
-  def ratingsToMap(data: Seq[Rating], maxUserId: Int, maxItemId: Int):  (ArrayBuffer[ArrayBuffer[Rating]], ArrayBuffer[ArrayBuffer[Rating]], mutable.Set[Int], mutable.Set[Int])= {
+  def ratingsToMap(data: Seq[Rating], maxUserId: Int, maxItemId: Int):
+  (ArrayBuffer[ArrayBuffer[Rating]], ArrayBuffer[ArrayBuffer[Rating]], mutable.Set[Int], mutable.Set[Int]) = {
     val ratingsByUser = ArrayBuffer.fill[ArrayBuffer[Rating]](maxUserId + 1)(ArrayBuffer[Rating]())
     val uniqueUsers = mutable.Set[Int]()
     val ratingsByItem = ArrayBuffer.fill[ArrayBuffer[Rating]](maxItemId + 1)(ArrayBuffer[Rating]())
@@ -92,8 +94,9 @@ package object predictions {
     val maxUserId: Int = train.maxBy(_.user).user
     // The maximum item ID
     val maxItemId: Int = train.maxBy(_.item).item
-    // The train ratings grouped by user
-    lazy val (ratingsByUser, ratingsByItem, uniqueUsers, uniqueItems) = ratingsToMap(train, maxUserId = maxUserId, maxItemId = maxItemId)
+    // The ratings grouped by user, the ratings groups by item, a set of users, a set of items
+    lazy val (ratingsByUser, ratingsByItem, uniqueUsers, uniqueItems) = ratingsToMap(train, maxUserId = maxUserId,
+      maxItemId = maxItemId)
 
 
     // A function that returns the global average rating given a train set
@@ -119,6 +122,7 @@ package object predictions {
 
     /**
      * Returns the average rating of a user.
+     *
      * @param user The user for which the average will be computed
      * @return The average rating
      */
@@ -147,6 +151,7 @@ package object predictions {
 
     /**
      * Normalize a single entry from the dataset.
+     *
      * @param rating The rating that will be normalized
      * @return The normalized rating
      */
@@ -272,8 +277,8 @@ package object predictions {
      * @return Mean Average Error between the predictions and the test
      */
     def getMAE(predictorFunc: (Int, Int) => Double): Double = {
-      var sumMAE:Double = 0.0
-      var lenMAE:Double = 0.0
+      var sumMAE: Double = 0.0
+      var lenMAE: Double = 0.0
       for (rating <- test) {
         sumMAE += (predictorFunc(rating.user, rating.item) - rating.rating).abs
         lenMAE += 1
@@ -302,6 +307,7 @@ package object predictions {
         train.map(x => x.rating).mean()
       }
     }
+
     /**
      * Function that normalizes the ratings of a dataset.
      *
@@ -405,6 +411,7 @@ package object predictions {
       val itemDevAverage = itemAvg(normalizeData(train, userAvg(train)))
       val userAverage = userAvg(train)
       val globalAverage = globalAvg(train)
+
       def prediction(user: Int, item: Int): Double = {
         if (!(itemDevAverage contains item) || itemDevAverage(item) == 0) {
           // No rating for i in the training set of the item average dev is 0
@@ -453,7 +460,8 @@ package object predictions {
     // The average global rating
     lazy val avgGlobal: Double = globalAvg(train)
     // The normalized ratings by user
-    var normalizedRatingsByUser: mutable.Map[Int, mutable.Map[Int, Double]] = mutable.Map[Int, mutable.Map[Int, Double]]()
+    var normalizedRatingsByUser: mutable.Map[Int, mutable.Map[Int, Double]] = mutable
+      .Map[Int, mutable.Map[Int, Double]]()
     // The normalized ratings by item
     var normalizedRatingsByItem: mutable.Map[Int, Seq[Rating]] = mutable.Map[Int, Seq[Rating]]()
     // Stores the similarity function that will be used
@@ -472,6 +480,7 @@ package object predictions {
 
     /**
      * Returns all of the normalized ratings of a user.
+     *
      * @param user The user for which the normalized ratings will be computed
      * @return The normalized ratings
      */
@@ -494,6 +503,7 @@ package object predictions {
 
     /**
      * Retuns all of the normalized ratings of an item
+     *
      * @param item The item for which the ratings will be computed
      * @return The normalized ratings of an item
      */
@@ -517,6 +527,7 @@ package object predictions {
 
     /**
      * Computes the norm-2 of the ratings of an user.
+     *
      * @param user The user for which the norm-2 will be computed
      * @return The norm-2 of the user's ratings
      */
@@ -536,7 +547,8 @@ package object predictions {
 
     /**
      * Preprocesses a rating according to eq. 9.
-     * @param user The user that made the rating
+     *
+     * @param user   The user that made the rating
      * @param rating The rating that was given
      * @return The preprocessed rating
      */
@@ -570,13 +582,15 @@ package object predictions {
       if (user1Ratings.size > user2Ratings.size) {
         for (a <- ratingsByUser(user2)) {
           if (user1Ratings.contains(a.item)) {
-            similarity += getPreprocessedRating(user1, user1Ratings(a.item)) * getPreprocessedRating(user2, user2Ratings(a.item))
+            similarity +=
+              getPreprocessedRating(user1, user1Ratings(a.item)) * getPreprocessedRating(user2, user2Ratings(a.item))
           }
         }
       } else {
         for (a <- ratingsByUser(user1)) {
           if (user2Ratings.contains(a.item)) {
-            similarity += getPreprocessedRating(user1, user1Ratings(a.item)) * getPreprocessedRating(user2, user2Ratings(a.item))
+            similarity +=
+              getPreprocessedRating(user1, user1Ratings(a.item)) * getPreprocessedRating(user2, user2Ratings(a.item))
           }
         }
       }
@@ -607,6 +621,7 @@ package object predictions {
 
     /**
      * Computes the similarity between two users.
+     *
      * @param user1 The first user
      * @param user2 The second user
      * @return The similarity according to the metric the object was instantiated with
@@ -630,8 +645,8 @@ package object predictions {
     /**
      * Returns the user-specific weighted-sum deviation for an item.
      *
-     * @param user       The user for which the rating will be computed.
-     * @param item       The item for which the rating will be computed.
+     * @param user The user for which the rating will be computed.
+     * @param item The item for which the rating will be computed.
      * @return The rating.
      */
     def getUserItemAvgDev(user: Int, item: Int): Double = {
@@ -654,6 +669,7 @@ package object predictions {
 
     /**
      * Generates a predicted rating for a user and an item.
+     *
      * @param user The user for which the prediction will be generated
      * @param item The item for which the prediction will be generated
      * @return The predicted rating
@@ -754,8 +770,8 @@ package object predictions {
     /**
      * Returns the user-specific weighted-sum deviation for an item, based on the k-nearest neighbors.
      *
-     * @param user       The user for which the deviation will be computed
-     * @param item       The item for which the deviation will be computed
+     * @param user The user for which the deviation will be computed
+     * @param item The item for which the deviation will be computed
      * @return The deviation
      */
     override def getUserItemAvgDev(user: Int, item: Int): Double = {
@@ -797,8 +813,8 @@ package object predictions {
 
       val ratedMovies = mutable.Set[Int]()
       if (user <= maxUserId && user >= 0) {
-          var idx = 0
-          val ratingLen = ratingsByUser(user).size
+        var idx = 0
+        val ratingLen = ratingsByUser(user).size
         while (idx < ratingLen) {
           ratedMovies += ratingsByUser(user)(idx).item
           idx += 1
