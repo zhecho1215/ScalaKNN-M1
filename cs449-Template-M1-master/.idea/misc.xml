@@ -5,28 +5,20 @@
     <option name="openedFilesInfos">
       <list>
         <OpenedFileInfo>
-          <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-20:08:23-iccluster028/knn-100k.json" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-20:09:28-iccluster028/knn-100k.json" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-20:15:09-iccluster028/knn-100k.json" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-20:16:15-iccluster028/knn-100k.json" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-20:17:46-iccluster028/knn-100k.json" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="19568" />
+          <option name="caretOffset" value="2492" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/shared/predictions.scala" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-21:15:46-iccluster028/knn-100k.json" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-21:18:02-iccluster028/knn-100k.json" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-22-21:16:56-iccluster028/knn-100k.json" />
         </OpenedFileInfo>
       </list>
     </option>

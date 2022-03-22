@@ -64,17 +64,21 @@ package object predictions {
     }
   }
 
-  def ratingsToMap(data: Seq[Rating], maxUserId: Int, maxItemId: Int):  (Array[mutable.Map[Int, Double]], Array[mutable.Map[Int, Double]], mutable.Set[Int], mutable.Set[Int])= {
-    val ratingsByUser = Array.fill[mutable.Map[Int, Double]](maxUserId + 1)(mutable.Map[Int, Double]())
+  def ratingsToMap(data: Seq[Rating], maxUserId: Int, maxItemId: Int):  (ArrayBuffer[ArrayBuffer[Rating]], ArrayBuffer[ArrayBuffer[Rating]], mutable.Set[Int], mutable.Set[Int])= {
+    val ratingsByUser = ArrayBuffer.fill[ArrayBuffer[Rating]](maxUserId + 1)(ArrayBuffer[Rating]())
     val uniqueUsers = mutable.Set[Int]()
-    val ratingsByItem = Array.fill[mutable.Map[Int, Double]](maxItemId + 1)(mutable.Map[Int, Double]())
+    val ratingsByItem = ArrayBuffer.fill[ArrayBuffer[Rating]](maxItemId + 1)(ArrayBuffer[Rating]())
     val uniqueItems = mutable.Set[Int]()
-    data.foreach(rating => {
-      ratingsByUser(rating.user)(rating.item) = rating.rating
-      ratingsByItem(rating.item)(rating.user) = rating.rating
+    var idx = 0
+    val dataLen = data.size
+    while (idx < dataLen) {
+      val rating = data(idx)
+      ratingsByUser(rating.user) += rating
+      ratingsByItem(rating.item) += rating
       uniqueUsers += rating.user
       uniqueItems += rating.item
-    })
+      idx += 1
+    }
     (ratingsByUser, ratingsByItem, uniqueUsers, uniqueItems)
   }
 
@@ -131,8 +135,8 @@ package object predictions {
 
       // Compute average rating
       var avgRating = 0.0
-      for (rating <- ratingsByUser(user).values) {
-        avgRating += rating
+      for (rating <- ratingsByUser(user)) {
+        avgRating += rating.rating
       }
       avgRating = avgRating / ratingsByUser(user).size
 
@@ -477,8 +481,12 @@ package object predictions {
           return mutable.Map[Int, Double]()
         }
         normalizedRatingsByUser(user) = mutable.Map[Int, Double]()
-        for ((item, rating) <- ratingsByUser(user)) {
-          normalizedRatingsByUser(user)(item) = normalizeRating(user, rating)
+        var idx = 0
+        val arrLen = ratingsByUser(user).size
+        while (idx < arrLen) {
+          val rating = ratingsByUser(user)(idx)
+          normalizedRatingsByUser(user)(rating.item) = normalizeRating(user, rating.rating)
+          idx += 1
         }
       }
       normalizedRatingsByUser(user)
@@ -495,8 +503,12 @@ package object predictions {
         if (item > maxItemId || item < 0) {
           return Seq[Rating]()
         }
-        for ((user, rating) <- ratingsByItem(item)) {
-          normalizedRatings += Rating(user, item, normalizeRating(user, rating))
+        var idx = 0
+        val arrLen = ratingsByItem(item).size
+        while (idx < arrLen) {
+          val rating = ratingsByItem(item)(idx)
+          normalizedRatings += Rating(rating.user, item, normalizeRating(rating.user, rating.rating))
+          idx += 1
         }
         normalizedRatingsByItem(item) = normalizedRatings
       }
@@ -556,15 +568,15 @@ package object predictions {
       val user2Ratings = getNormalizedRatingsByUser(user2)
       var similarity = 0.0
       if (user1Ratings.size > user2Ratings.size) {
-        for (a <- user2Ratings.keys) {
-          if (user1Ratings.contains(a)) {
-            similarity += getPreprocessedRating(user1, user1Ratings(a)) * getPreprocessedRating(user2, user2Ratings(a))
+        for (a <- ratingsByUser(user2)) {
+          if (user1Ratings.contains(a.item)) {
+            similarity += getPreprocessedRating(user1, user1Ratings(a.item)) * getPreprocessedRating(user2, user2Ratings(a.item))
           }
         }
       } else {
-        for (a <- user1Ratings.keys) {
-          if (user2Ratings.contains(a)) {
-            similarity += getPreprocessedRating(user1, user1Ratings(a)) * getPreprocessedRating(user2, user2Ratings(a))
+        for (a <- ratingsByUser(user1)) {
+          if (user2Ratings.contains(a.item)) {
+            similarity += getPreprocessedRating(user1, user1Ratings(a.item)) * getPreprocessedRating(user2, user2Ratings(a.item))
           }
         }
       }
@@ -783,11 +795,14 @@ package object predictions {
       // Get movies that were not rated by user
       val allMovies = movieNames.keys.toSet
 
-      val ratedMovies: collection.Set[Int] = {
-        if (user > maxUserId || user < 0) {
-          Set[Int]()
+      val ratedMovies = mutable.Set[Int]()
+      if (user <= maxUserId && user >= 0) {
+          var idx = 0
+          val ratingLen = ratingsByUser(user).size
+        while (idx < ratingLen) {
+          ratedMovies += ratingsByUser(user)(idx).item
+          idx += 1
         }
-        ratingsByUser(user).keySet
       }
 
       val notRatedMovies = allMovies.diff(ratedMovies)
