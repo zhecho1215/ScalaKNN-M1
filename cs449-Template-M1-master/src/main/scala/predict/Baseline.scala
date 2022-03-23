@@ -42,11 +42,12 @@ object Baseline extends App {
   var timings = scala.collection.mutable.Map.empty[String, Seq[Double]]
   for (predictor: String <- Array("Baseline", "Global", "User", "Item")) {
     val measurements = (1 to conf.num_measurements()).map(x => timingInMs(() => {
+      val timingSolver = new BaselineSolver(train, test)
       predictor match {
-        case "Baseline" => solver.getMAE(solver.baselinePredictor(train))
-        case "Global" => solver.getMAE(solver.globalAvgPredictor(train))
-        case "User" => solver.getMAE(solver.userAvgPredictor(train))
-        case "Item" => solver.getMAE(solver.itemAvgPredictor(train))
+        case "Baseline" => timingSolver.getMAE(timingSolver.baselinePredictor(train))
+        case "Global" => timingSolver.getMAE(timingSolver.globalAvgPredictor(train))
+        case "User" => timingSolver.getMAE(timingSolver.userAvgPredictor(train))
+        case "Item" => timingSolver.getMAE(timingSolver.itemAvgPredictor(train))
       }
     }))
     timings(predictor) = measurements.map(t => t._2)
