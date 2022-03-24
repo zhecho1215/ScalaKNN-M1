@@ -9,12 +9,16 @@
           <option name="fileUrl" value="file://$PROJECT_DIR$/src/test/scala/distributed/DistributedBaselineTests.scala" />
         </OpenedFileInfo>
         <OpenedFileInfo>
+          <option name="caretOffset" value="1090" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/timeCluster.sh" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
           <option name="caretOffset" value="63" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/config.sh" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="666" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/timeCluster.sh" />
+          <option name="caretOffset" value="2679" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/src/test/scala/predict/BaselineTests.scala" />
         </OpenedFileInfo>
       </list>
     </option>
