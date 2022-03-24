@@ -61,7 +61,7 @@ class BaselineTests extends AnyFunSuite with BeforeAndAfterAll {
    test("MAE on all four non-personalized methods on data/ml-100k/u2.base and data/ml-100k/u2.test") {
      assert(within(solver.getMAE(solver.globalAvgPredictor(train2)), 0.9489109899999697, 0.0001))
      assert(within(solver.getMAE(solver.userAvgPredictor(train2)), 0.8383401457987351, 0.0001))
-     assert(within(solver.getMAE(solver.itemAvgPredictor(train2)),  0.8188963496888565, 0.0001))
+     assert(within(solver.getMAE(solver.itemAvgPredictor(train2)),  0.8206951490543668, 0.0001))
      assert(within(solver.getMAE(solver.baselinePredictor (train2)), 0.7604467914538644, 0.0001))
    }
 }

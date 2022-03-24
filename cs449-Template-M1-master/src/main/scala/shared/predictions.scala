@@ -410,7 +410,7 @@ package object predictions {
      * @param train : The train data in RDD format
      * @return A baseline prediction for an item and a user based on train data
      */
-    def baselinePredictor(train: RDD[Rating]): (Int, Int) => Double = {
+    def getSingleBaselinePrediction(train: RDD[Rating]): (Int, Int) => Double = {
       def prediction(user: Int, item: Int): Double = {
 
         val userAvg = getUserAvg(train)(user, 0)
@@ -421,7 +421,7 @@ package object predictions {
             // The user has no rating
             return globalAvg(train)
           }
-          return getUserAvg(train)(user, 0)
+          return userAvg
         }
         userAvg + itemAvgDev * scaleUserRating(userAvg + itemAvgDev, userAvg)
       }

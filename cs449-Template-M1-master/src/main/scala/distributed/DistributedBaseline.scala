@@ -78,7 +78,7 @@ object DistributedBaseline extends App {
           // Datatype of answer: Double,
           "4.Item1AvgDev" -> ujson.Num(solver.getItemAvgDev(train, 1)),
           // Datatype of answer: Double
-          "5.PredUser1Item1" -> ujson.Num(solver.baselinePredictor(train)(1, 1)),
+          "5.PredUser1Item1" -> ujson.Num(solver.getSingleBaselinePrediction(train)(1, 1)),
           // Datatype of answer: Double
           "6.Mae" -> ujson.Num(solver.getMAE(solver.baselineRDDPredictor(train)))
         ),
