@@ -613,9 +613,13 @@ package object predictions {
       val user1Ratings = getNormalizedRatingsByUser(user1)
       val user2Ratings = getNormalizedRatingsByUser(user2)
       var similarity = 0.0
+
+      // Iterate keys of the user that has less ratings in the train set
       if (user1Ratings.size > user2Ratings.size) {
         for (a <- ratingsByUser(user2)) {
+          // Check if the other user rated the same item
           if (user1Ratings.contains(a.item)) {
+            // Add score to similarity if both users rated the same item
             similarity +=
               getPreprocessedRating(user1, user1Ratings(a.item)) * getPreprocessedRating(user2, user2Ratings(a.item))
           }
@@ -645,7 +649,9 @@ package object predictions {
       }
       val user1Ratings = getNormalizedRatingsByUser(user1).keys.toSet
       val user2Ratings = getNormalizedRatingsByUser(user2).keys.toSet
+      // Find how many items were rated by both users
       val itemIntersection = user1Ratings.intersect(user2Ratings).size
+      // Find how many unique items the two users rated in total
       val itemUnion = user1Ratings.union(user2Ratings).size
       if (itemUnion == 0) {
         return 0
@@ -687,8 +693,10 @@ package object predictions {
       var numerator = 0.0
       var denominator = 0.0
       val relevantRatings = getNormalizedRatingsByItem(item)
+      // Compute average rating deviation by taking into account similarity
       for (rating <- relevantRatings) {
         if (user != rating.user) {
+          // Only consider ratings that were given by a different user
           val similarity = getSimilarity(user, rating.user)
           numerator = numerator + similarity * rating.rating
           denominator = denominator + abs(similarity)
@@ -715,6 +723,7 @@ package object predictions {
       }
       val userItemAvgDev = getUserItemAvgDev(user = user, item = item)
       if (item < minItemId || item > maxItemId || ratingsByItem(item).isEmpty || userItemAvgDev == 0) {
+        // The item is not in the train set or the rating deviation is 0
         return getAvgRatingByUser(user)
       }
       val userAvg = getAvgRatingByUser(user)
