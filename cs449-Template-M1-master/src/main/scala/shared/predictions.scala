@@ -323,7 +323,9 @@ package object predictions {
     }
   }
 
-
+  /**
+   * This class contains the functions that generate the results used in the Distributed predictions.
+   */
   class DistributedSolver(test: RDD[Rating]) extends java.io.Serializable {
     // A function that returns the global average rating given a train set
     val globalAvg: RDD[Rating] => Double = (train: RDD[Rating]) => train.map(x => x.rating).mean
@@ -412,9 +414,12 @@ package object predictions {
      */
     def getSingleBaselinePrediction(train: RDD[Rating]): (Int, Int) => Double = {
       def prediction(user: Int, item: Int): Double = {
-
         val userAvg = getUserAvg(train)(user, 0)
         val itemAvgDev = getItemAvgDev(train, item)
+        if (userAvg == 0) {
+          // The user has no rating
+          return globalAvg(train)
+        }
         if (itemAvgDev == 0) {
           // No rating for i in the training set of the item average dev is 0
           if (train.filter(x => x.user == user).count() == 0) {
@@ -710,11 +715,6 @@ package object predictions {
       }
       val userItemAvgDev = getUserItemAvgDev(user = user, item = item)
       if (item < minItemId || item > maxItemId || ratingsByItem(item).isEmpty || userItemAvgDev == 0) {
-        // No rating for i in the training set of the item average dev is 0
-        if (user > maxUserId || user < minUserId || ratingsByUser(user).isEmpty) {
-          // The user has no rating
-          return avgGlobal
-        }
         return getAvgRatingByUser(user)
       }
       val userAvg = getAvgRatingByUser(user)
