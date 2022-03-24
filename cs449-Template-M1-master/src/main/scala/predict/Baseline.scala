@@ -39,6 +39,7 @@ object Baseline extends App {
   val solver = new BaselineSolver(train, test)
 
   // Get timing for each of the 4 methods
+  // Get timing for each of the 4 methods
   var timings = scala.collection.mutable.Map.empty[String, Seq[Double]]
   for (predictor: String <- Array("Baseline", "Global", "User", "Item")) {
     val measurements = (1 to conf.num_measurements()).map(x => timingInMs(() => {
