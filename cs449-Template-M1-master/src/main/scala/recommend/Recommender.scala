@@ -49,7 +49,7 @@ object Recommender extends App {
   }).collect().toMap
 
   // Initialize the solver for questions related to the Recommender algorithm.
-  val solver = new RecommenderSolver(data ++ personal, movieNames, k = 300)
+  val solver = new RecommenderSolver(data ++ personal, k = 300)
 
   // Save answers as JSON
   def printToFile(content: String,

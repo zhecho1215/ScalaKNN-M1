@@ -830,7 +830,7 @@ package object predictions {
   /**
    * This class contains the functions that generate the results used only in the Recommender predictions.
    */
-  class RecommenderSolver(train: Seq[Rating], movieNames: Map[Int, String], k: Int)
+  class RecommenderSolver(train: Seq[Rating], k: Int)
     extends KNNSolver(train, Seq(), k) {
 
     /**
@@ -842,7 +842,7 @@ package object predictions {
      */
     def getRecommendations(user: Int, top: Int): List[(Int, Double)] = {
       // Get movies that were not rated by user
-      val allMovies = movieNames.keys.toSet
+      val allMovies = uniqueItems
 
       val ratedMovies = mutable.Set[Int]()
       if (user <= maxUserId && user >= minUserId) {

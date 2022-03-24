@@ -5,28 +5,16 @@
     <option name="openedFilesInfos">
       <list>
         <OpenedFileInfo>
-          <option name="caretOffset" value="4542" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/predict/Baseline.scala" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="998" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/timeCluster.sh" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
           <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timecluster-2022-03-23-18:35:40-iccluster028/distributed-25m-4.json" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/src/test/scala/distributed/DistributedBaselineTests.scala" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="824" />
+          <option name="caretOffset" value="63" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/config.sh" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="216" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timetrials-2022-03-23-16:59:00-iccluster028/knn-100k.json" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="7252" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/shared/predictions.scala" />
+          <option name="caretOffset" value="666" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/timeCluster.sh" />
         </OpenedFileInfo>
       </list>
     </option>
