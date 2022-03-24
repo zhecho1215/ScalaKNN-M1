@@ -324,7 +324,7 @@ package object predictions {
   }
 
 
-  class DistributedSolvers(test: RDD[Rating]) extends java.io.Serializable {
+  class DistributedSolver(test: RDD[Rating]) extends java.io.Serializable {
     // A function that returns the global average rating given a train set
     val globalAvg: RDD[Rating] => Double = (train: RDD[Rating]) => train.map(x => x.rating).mean
     // A function that returns the average rating by user given a train set

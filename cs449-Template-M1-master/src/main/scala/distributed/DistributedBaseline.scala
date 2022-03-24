@@ -38,10 +38,10 @@ object DistributedBaseline extends App {
   val test = load(spark, conf.test(), conf.separator())
 
   // Initialize the solvers for questions in D
-  val solver = new DistributedSolvers(test)
+  val solver = new DistributedSolver(test)
 
   val measurements = (1 to conf.num_measurements()).map(x => timingInMs(() => {
-    val solver = new DistributedSolvers(test)
+    val solver = new DistributedSolver(test)
     solver.getMAE(solver.baselineRDDPredictor(train))
   }))
   val timings = measurements.map(t => t._2) // Retrieve the timing measurements

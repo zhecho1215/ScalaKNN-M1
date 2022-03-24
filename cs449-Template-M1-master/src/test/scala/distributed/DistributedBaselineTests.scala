@@ -21,7 +21,7 @@ class DistributedBaselineTests extends AnyFunSuite with BeforeAndAfterAll {
    val test2Path = "data/ml-100k/u2.test"
    var train2 : org.apache.spark.rdd.RDD[shared.predictions.Rating] = null
    var test2 : org.apache.spark.rdd.RDD[shared.predictions.Rating] = null
-   var solver : DistributedSolvers = null
+   var solver : DistributedSolver = null
 
    override def beforeAll {
        Logger.getLogger("org").setLevel(Level.OFF)
@@ -32,7 +32,7 @@ class DistributedBaselineTests extends AnyFunSuite with BeforeAndAfterAll {
        spark.sparkContext.setLogLevel("ERROR")
        train2 = load(spark, train2Path, separator)
        test2 = load(spark, test2Path, separator)
-       solver = new DistributedSolvers(test2)
+       solver = new DistributedSolver(test2)
    }
 
    // All the functions definitions for the tests below (and the tests in other suites) 
@@ -55,7 +55,7 @@ class DistributedBaselineTests extends AnyFunSuite with BeforeAndAfterAll {
    // with the following signature: ````predictor: (train: Seq[shared.predictions.Rating]) => ((u: Int, i: Int) => Double)````;
    // 2. There should be a single reusable function to compute the MAE on the test set, given a predictor;
    // 3. There should be invocations of both to show they work on the following datasets.
-  test("MAE on all four non-personalized methods on data/ml-100k/u2.base and data/ml-100k/u2.test") {
+  test("MAE on distributed methods on data/ml-100k/u2.base and data/ml-100k/u2.test") {
     assert(within(solver.getMAE(solver.baselineRDDPredictor(train2)), 0.7604467914538644, 0.0001))
   }
 }

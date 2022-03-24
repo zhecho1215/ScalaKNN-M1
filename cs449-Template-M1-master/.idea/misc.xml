@@ -5,20 +5,24 @@
     <option name="openedFilesInfos">
       <list>
         <OpenedFileInfo>
-          <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/src/test/scala/distributed/DistributedBaselineTests.scala" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="1090" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/timeCluster.sh" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
           <option name="caretOffset" value="63" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/config.sh" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="2679" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/src/test/scala/predict/BaselineTests.scala" />
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/src/test/scala/distributed/DistributedBaselineTests.scala" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/recommend/Recommender.scala" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="190" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/run-2022-03-24-18:04:08-iccluster028/recommender-100k.json" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="281" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/src/test/scala/recommend/RecommenderTests.scala" />
         </OpenedFileInfo>
       </list>
     </option>
