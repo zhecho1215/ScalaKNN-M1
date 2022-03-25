@@ -246,16 +246,10 @@ package object predictions {
      * @return The average score per user
      */
     def userAvgPredictor(train: Seq[Rating]): (Int, Int) => Double = {
+      val avgRatingByUser = userAvg(train)
       val avgGlobal = globalAvg(train)
 
-      (user: Int, item: Int) => {
-        val avgRating = getAvgRatingByUser(user)
-        if (avgRating == 0) {
-          avgGlobal
-        } else {
-          avgRating
-        }
-      }
+      (user: Int, item: Int) => avgRatingByUser.getOrElse(user, avgGlobal)
     }
 
     /**
@@ -266,9 +260,19 @@ package object predictions {
      */
     def itemAvgPredictor(train: Seq[Rating]): (Int, Int) => Double = {
       val avgRatingByItem = itemAvg(train)
+      val avgRatingByUser = userAvg(train)
       val avgGlobal = globalAvg(train)
-
-      (user: Int, item: Int) => avgRatingByItem.getOrElse(item, avgGlobal)
+      (user: Int, item: Int) => {
+        if (!avgRatingByItem.contains(item)) {
+          if (!avgRatingByUser.contains(user)) {
+            avgGlobal
+          }
+          else {
+            avgRatingByUser(user)
+          }
+        }
+        else avgRatingByItem(item)
+      }
     }
 
     /**
