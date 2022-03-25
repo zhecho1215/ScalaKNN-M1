@@ -5,44 +5,16 @@
     <option name="openedFilesInfos">
       <list>
         <OpenedFileInfo>
-          <option name="caretOffset" value="1944" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/src/test/scala/recommend/RecommenderTests.scala" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="1808" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/test-2022-03-24-18:26:31-iccluster028/log.txt" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/test-2022-03-24-18:52:01-iccluster028/log.txt" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/timeCluster.sh" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="1195" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/timeOthers.sh" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="977" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timeOthers-2022-03-24-18:53:37-iccluster028/baseline-25m.json" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timeOthers-2022-03-24-18:53:37-iccluster028/distributed-25m-4.json" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
-          <option name="caretOffset" value="0" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/logs/timeOthers-2022-03-24-18:53:37-iccluster028/distributed-25m-1.json" />
-        </OpenedFileInfo>
-        <OpenedFileInfo>
           <option name="caretOffset" value="2666" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/src/test/scala/predict/BaselineTests.scala" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="25154" />
-          <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/shared/predictions.scala" />
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/predict/Baseline.scala" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/src/test/scala/predict/PersonalizedTests.scala" />
         </OpenedFileInfo>
         <OpenedFileInfo>
           <option name="caretOffset" value="25154" />
