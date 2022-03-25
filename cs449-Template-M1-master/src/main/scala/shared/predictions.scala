@@ -260,19 +260,8 @@ package object predictions {
      */
     def itemAvgPredictor(train: Seq[Rating]): (Int, Int) => Double = {
       val avgRatingByItem = itemAvg(train)
-      val avgRatingByUser = userAvg(train)
       val avgGlobal = globalAvg(train)
-      (user: Int, item: Int) => {
-        if (!avgRatingByItem.contains(item)) {
-          if (!avgRatingByUser.contains(user)) {
-            avgGlobal
-          }
-          else {
-            avgRatingByUser(user)
-          }
-        }
-        else avgRatingByItem(item)
-      }
+      (user: Int, item: Int) => avgRatingByItem.getOrElse(item, avgGlobal)
     }
 
     /**

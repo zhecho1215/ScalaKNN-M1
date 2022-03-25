@@ -5,11 +5,15 @@
     <option name="openedFilesInfos">
       <list>
         <OpenedFileInfo>
+          <option name="caretOffset" value="0" />
+          <option name="fileUrl" value="file://$PROJECT_DIR$/README.md" />
+        </OpenedFileInfo>
+        <OpenedFileInfo>
           <option name="caretOffset" value="2666" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/src/test/scala/predict/BaselineTests.scala" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="0" />
+          <option name="caretOffset" value="1112" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/predict/Baseline.scala" />
         </OpenedFileInfo>
         <OpenedFileInfo>
@@ -17,7 +21,7 @@
           <option name="fileUrl" value="file://$PROJECT_DIR$/src/test/scala/predict/PersonalizedTests.scala" />
         </OpenedFileInfo>
         <OpenedFileInfo>
-          <option name="caretOffset" value="25154" />
+          <option name="caretOffset" value="8824" />
           <option name="fileUrl" value="file://$PROJECT_DIR$/src/main/scala/shared/predictions.scala" />
         </OpenedFileInfo>
       </list>
